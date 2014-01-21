@@ -1,6 +1,7 @@
 {
     "name": "qlcorp/vext-framework",
     "description": "A CRUD framework to integrate Laravel with ExtJS",
+    "license": "MIT",
     "authors": [
         {
             "name": "Quantum Logic Corporation",
