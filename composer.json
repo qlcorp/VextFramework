@@ -1,0 +1,23 @@
+{
+    "name": "qlcorp/vext-framework",
+    "description": "A CRUD framework to integrate Laravel with ExtJS",
+    "authors": [
+        {
+            "name": "Quantum Logic Corporation",
+            "email": "vext@qlcorp.net"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "illuminate/support": "4.1.*"
+    },
+    "autoload": {
+        "classmap": [
+            "src/migrations"
+        ],
+        "psr-0": {
+            "Qlcorp\\VextFramework\\": "src/"
+        }
+    },
+    "minimum-stability": "dev"
+}
