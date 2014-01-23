@@ -23,6 +23,7 @@ abstract class CrudController extends Controller {
      */
     protected $Model;
     private $root;
+    private $model;
 
     /**
      * Implicitly constructs CrudController from child
@@ -34,7 +35,9 @@ abstract class CrudController extends Controller {
             $class = get_class($this);
             $this->Model = substr($class, 0, -10);
         }
-        $this->root = lcfirst($this->Model) . 's';
+        $this->root = lcfirst($this->Model) . 's';  //use existing Laravel function getBaseClass()
+        $Model = $this->Model;
+        $this->model = new $Model;
     }
 
     /**
@@ -43,11 +46,8 @@ abstract class CrudController extends Controller {
      */
     public function getModel() {
         $Model = $this->Model;
-        $model = new $Model;
-        $table = $model->getTable();
-        /*$model = new $Model();
+        $table = $this->model->getTable();
 
-        return $model->fields();*/
         return \VextSchema::getExtJsModel($table);
     }
 
@@ -60,7 +60,10 @@ abstract class CrudController extends Controller {
      * @return string
      */
     public function getRead() {
+        // TODO: get by id, query
         $Model = $this->Model;
+
+        //$id = $this->getKeyFromInput();
 
         $limit = Input::get('limit');
         $offset = Input::get('start', 0);
@@ -69,7 +72,6 @@ abstract class CrudController extends Controller {
         if ($limit) $query->take($limit);
 
         return $this->success($query->get());
-
     }
 
     /**
@@ -136,8 +138,7 @@ abstract class CrudController extends Controller {
     private function getKeyFromInput() {
         $Model = $this->Model;
 
-        $model = new $Model();
-        $key = $model->getKeyName();
+        $key = $this->model->getKeyName();
         $id = Input::get($key);
 
         return $id;
