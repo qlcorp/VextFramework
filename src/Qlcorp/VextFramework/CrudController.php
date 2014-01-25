@@ -22,7 +22,7 @@ abstract class CrudController extends Controller {
      * @var string
      */
     protected $Model;
-    private $root;
+    protected $root;
     private $model;
 
     /**
@@ -35,9 +35,13 @@ abstract class CrudController extends Controller {
             $class = get_class($this);
             $this->Model = substr($class, 0, -10);
         }
-        $this->root = lcfirst($this->Model) . 's';  //use existing Laravel function getBaseClass()
+        //todo: use existing Laravel function getBaseClass()
+        if ( !$this->root ) {
+            $this->root = lcfirst($this->Model) . 's';
+        }
+
         $Model = $this->Model;
-        $this->model = new $Model;
+        $this->model = new $Model;  //todo: use parent's __callStatic()
     }
 
     /**
@@ -62,16 +66,54 @@ abstract class CrudController extends Controller {
     public function getRead() {
         // TODO: get by id, query
         $Model = $this->Model;
-
-        //$id = $this->getKeyFromInput();
-
-        $limit = Input::get('limit');
+        //Get single record by primary key
+        if ( ($id = $this->getKeyFromInput()) !== null ) {
+            $record = $Model::find($id);
+            if ( $record !== null ) {
+                return $this->success($record);
+            } else {
+                //todo: what to return here?
+                return $this->failure($record, "$Model not found.");
+            }
+        }
+        //Get multiple records (pagination)
+        $filter = Input::get('filter');
+        $limit =  Input::get('limit');
         $offset = Input::get('start', 0);
 
-        $query = $Model::skip($offset);
-        if ($limit) $query->take($limit);
+        $query = $this->model->newQuery();
 
-        return $this->success($query->get());
+        if ( $filter ) $this->filterQuery($query, json_decode($filter));
+
+        $count = $query->count();
+
+        $query->skip($offset);
+        if ( $limit ) $query->take($limit);
+
+        return $this->success($query->get(), array('total' => $count));
+    }
+
+    /**
+     * Sets filters for query
+     *
+     * @param $query
+     * @param array $filters
+     * @return mixed
+     * @throws \InvalidArgumentException
+     */
+    protected function filterQuery(&$query, $filters) {
+        foreach ($filters as $filter) {
+            $property = $filter->property;
+            $value = '%' . $filter->value . '%';
+
+            if ( empty($property) || empty($value) ) {
+                throw new \InvalidArgumentException();
+            }
+
+            $query->where($property, 'like', $value);
+        }
+
+        return $query;
     }
 
     /**

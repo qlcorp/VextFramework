@@ -50,13 +50,13 @@ abstract class CrudModel extends \Eloquent {
         }
     }
 
-   /**
-    * Event Handlers
-    *
-    * By calling parent::boot() in child, the model events can be overwritten
-    * individually within the boot() function
-    *
-    */
+    /**
+     * Event Handlers
+     *
+     * By calling parent::boot() in child, the model events can be overwritten
+     * individually within the boot() function
+     *
+     */
     public static function boot() {
         parent::boot();
         //Halt saving if validation fails
