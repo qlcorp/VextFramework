@@ -19,17 +19,51 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
     protected $fieldWidth = null;
     protected $regex = null;
     protected $required = null;
+    protected $fillable = false;
+    protected $fieldConfig = array();
 
     public function __construct($attributes = array(), VextBlueprint $blueprint) {
         parent::__construct($attributes);
         $this->blueprint = $blueprint;
     }
 
+    public function getRules() {
+        return $this->rules;
+    }
+
+    public function getFieldConfig() {
+        return $this->fieldConfig;
+    }
+
+    public function getName() {
+        return $this->attributes['name'];
+    }
+
+    public function getType() {
+        return $this->attributes['type'];
+    }
+
+    public function getRequired() {
+        return $this->required;
+    }
+    //Fillable
+
+    public function fillable() {
+        return $this->blueprint->getCurrentColumn()->setFillable();
+    }
+
+    protected function setFillable() {
+        $this->fillable = true;
+        $this->blueprint->addFillable($this->attributes['name']);
+        return $this;
+    }
+
+    //Requires/AllowBlank
     public function required($required = true) {
         return $this->blueprint->getCurrentColumn()->setRequired($required);
     }
 
-    public function setRequired($required) {
+    protected function setRequired($required) {
         $this->required = (bool) $required;
         return $this;
     }
@@ -103,8 +137,8 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
     }
 
     public function toArray() {
-        extract($this->attributes);
-        $field = compact('name', 'type');
+        $this->setOption($field, 'name', $this->getName());
+        $this->setOption($field, 'type', $this->getType());
         $this->setOption($field, 'fieldConfig', $this->fieldConfig());
         $this->setOption($field, 'grid', $this->grid);
         $this->setOption($field, 'dropdown', $this->dropdown);
@@ -120,8 +154,9 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
         $this->setOption($field, 'fieldWidth', $this->fieldWidth);
         $this->setOption($field, 'regex', $this->regex);
         $this->setOption($field, 'allowBlank', $this->required, !$this->required);
+        $this->setOption($field, 'fillable', $this->fillable);
 
-        $field = array_merge($field, $this->rules);
+        $this->fieldConfig = $field = array_merge($field, $this->rules);
         return $field;
     }
 

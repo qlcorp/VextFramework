@@ -20,6 +20,18 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
 
     protected $current_column;
     protected $current_name;
+    protected $model_name = '';
+    protected $fillable = array();
+    protected $timestamps = 'false';
+
+    public function addFillable($col) {
+        $this->fillable[] = $col;
+    }
+
+    public function timestamps() {
+        parent::timestamps();
+        $this->timestamps = 'true';
+    }
 
     /**
      * Add a new column to the blueprint.
@@ -40,6 +52,14 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         return $this->current_column;
     }
 
+    public function model($model) {
+        $this->model_name = $model;
+    }
+
+    public function getModel() {
+        return $this->model_name;
+    }
+
     public function getCurrentColumn() {
         return $this->current_column;
     }
@@ -57,6 +77,53 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
             $fields[] = $column->toArray();
         }
         return array('fields' => $fields);
+    }
+
+    public function laravelModel() {
+        $str = "<?php
+class $this->model_name extends Base$this->model_name {
+
+}
+";
+
+        return $str;
+    }
+
+    public function laravelBaseModel() {
+        $fillable = 'array(\'' . implode('\', \'', $this->fillable) . '\')';
+        $rules = array();
+        foreach ($this->columns as $column) {
+            //$config = $column->getFieldConfig();
+            $ruleList = array();
+            $validations = $column->getRules();
+            $name = $column->getName();
+
+            if ( ($required = $column->getRequired()) !== null )  {
+                $ruleList[] = 'required';
+            }
+
+            if ( isset($validations['minLength']) )  {
+                $ruleList[] = 'min:' . $validations['minLength'];
+            }
+
+            if ( !empty($ruleList) ) {
+                $ruleList = implode($ruleList, '|');
+                $rules[] = "'$name' => '$ruleList'";
+            }
+        }
+        $rules = 'array(' . implode($rules, ',') . ')';
+
+        $str = "<?php
+use Qlcorp\VextFramework\CrudModel;
+
+class Base$this->model_name extends CrudModel {
+    protected \$table = '$this->table';
+    public \$timestamps = $this->timestamps;
+    protected \$fillable = $fillable;
+    protected \$rules = $rules;
+} ";
+
+        return $str;
     }
 
 }

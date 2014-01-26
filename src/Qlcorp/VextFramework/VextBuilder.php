@@ -4,25 +4,67 @@ use Closure;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\Builder;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\View;
 
 class VextBuilder extends Builder {
 
-    protected static $dir = 'public/ExtJsModels';
+    protected static $extJsModelsDir = 'public/ExtJsModels';
+    protected static $laravelModelsDir = 'app/models/';
+    protected static $laravelBaseModelsDir = 'app/models/vext/';
     protected static $fileName = 'extJsModel.json';
 
     protected function build(Blueprint $blueprint) {
         //dd($blueprint->toJson());
-        $this->writeJsonModel($blueprint);
+        $this->writeModels($blueprint);
 
         parent::build($blueprint);
     }
 
-    protected function writeJsonModel($blueprint) {
+    protected function writeModels($blueprint) {
+        $fields = $blueprint->toArray();
+
+        $this->writeJsonModel($fields, $blueprint);
+        $this->writeLaravelModel($fields, $blueprint);
+    }
+
+    protected function writeJsonModel($fields, $blueprint) {
         $table = $blueprint->getTable();
         $dir = self::getWriteDirectory($table);
         self::mkdir($dir);
+        $json = json_encode($fields);
 
-        return File::put($dir . self::$fileName, $blueprint->toJson());
+        return File::put($dir . self::$fileName, $json);
+    }
+
+    protected function writeLaravelModel($fields, $blueprint) {
+        $table = $blueprint->getTable();
+        $modelName = $blueprint->getModel();
+
+        if ($modelName === '') {
+            $modelName = str_singular(studly_case($table));
+            $blueprint->model($modelName);
+        }
+
+        $baseModel = $blueprint->laravelBaseModel();
+        $model = $blueprint->laravelModel();
+
+        File::put($this->laravelBaseModelFile($modelName), $baseModel);
+
+        $laravelModelFile = $this->laravelModelFile($modelName);
+
+        if ( !File::isFile($laravelModelFile) ) {
+            File::put($laravelModelFile, $model);
+        }
+    }
+
+    protected function laravelBaseModelFile($modelName) {
+        self::mkDir(self::$laravelBaseModelsDir);
+        return self::$laravelBaseModelsDir . 'Base' . $modelName . '.php';
+    }
+
+    protected function laravelModelFile($modelName) {
+        self::mkDir(self::$laravelModelsDir);
+        return self::$laravelModelsDir . $modelName . '.php';
     }
 
     public function getExtJsModel($table) {
@@ -31,12 +73,12 @@ class VextBuilder extends Builder {
     }
 
     protected function getWriteDirectory($table) {
-        $path = self::$dir . '/' . $table . '/';
+        $path = self::$extJsModelsDir . '/' . $table . '/';
         return $path;
     }
 
     protected static function getReadDirectory($table) {
-        $path = '../' . self::$dir . '/' . $table . '/';
+        $path = '../' . self::$extJsModelsDir . '/' . $table . '/';
         return $path;
     }
 
