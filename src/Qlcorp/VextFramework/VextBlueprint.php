@@ -3,6 +3,7 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Contracts\ArrayableInterface;
 use Illuminate\Support\Contracts\JsonableInterface;
+use Illuminate\Support\Facades\File;
 
 /**
  * Class VextBlueprint
@@ -29,8 +30,8 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     }
 
     public function timestamps() {
-        parent::timestamps();
         $this->timestamps = 'true';
+        return parent::timestamps();
     }
 
     /**
@@ -80,50 +81,70 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     }
 
     public function laravelModel() {
-        $str = "<?php
-class $this->model_name extends Base$this->model_name {
-
-}
-";
-
-        return $str;
+        $stub = $this->getStub('model.stub');
+        $stub = str_replace('{{model}}', $this->model_name , $stub);
+        return $stub;
     }
 
     public function laravelBaseModel() {
-        $fillable = 'array(\'' . implode('\', \'', $this->fillable) . '\')';
+        $fillable = '\'' . implode("',\r\n\t\t'", $this->fillable) . '\'';
         $rules = array();
+        $messages = array();
         foreach ($this->columns as $column) {
             //$config = $column->getFieldConfig();
-            $ruleList = array();
-            $validations = $column->getRules();
+            $laravelRules = array();
+            $extJsRules = $column->getRules();
             $name = $column->getName();
 
             if ( ($required = $column->getRequired()) !== null )  {
-                $ruleList[] = 'required';
+                $laravelRules[] = 'required';
             }
 
-            if ( isset($validations['minLength']) )  {
-                $ruleList[] = 'min:' . $validations['minLength'];
+            $this->addRule($laravelRules, $extJsRules, 'min', 'minLength');
+            $this->addRule($laravelRules, $extJsRules, 'max', 'maxLength');
+            $this->addRule($laravelRules, $extJsRules, 'min', 'minValue');
+            $this->addRule($laravelRules, $extJsRules, 'max', 'maxValue');
+            if ( isset($extJsRules['minText']) ) {
+                $messages[] = "'$name.min' => '" . $extJsRules['minText'] . '\'';
             }
 
-            if ( !empty($ruleList) ) {
-                $ruleList = implode($ruleList, '|');
-                $rules[] = "'$name' => '$ruleList'";
+            if ( !empty($laravelRules) ) {
+                $laravelRules = implode($laravelRules, '|');
+                $rules[] = "'$name' => '$laravelRules'";
             }
         }
-        $rules = 'array(' . implode($rules, ',') . ')';
 
-        $str = "<?php
-use Qlcorp\VextFramework\CrudModel;
+        $rules = implode($rules, ",\r\n\t\t");
+        $messages = implode($messages, "\r\n\t\t");
+        $stub = $this->getStub('base_model.stub');
+        return $this->populateStub($stub, $fillable, $rules, $messages);
 
-class Base$this->model_name extends CrudModel {
-    protected \$table = '$this->table';
-    public \$timestamps = $this->timestamps;
-    protected \$fillable = $fillable;
-    protected \$rules = $rules;
-} ";
+    }
 
-        return $str;
+    protected function addRule(&$laravelRules, $extJsRules, $laravelName, $extJsName) {
+        if ( isset($extJsRules[$extJsName]) )  {
+            $laravelRules[] = $laravelName . ':' . $extJsRules[$extJsName];
+        }
+
+        return $laravelRules;
+    }
+
+    protected function getStubPath() {
+        return __DIR__ . '/stubs';
+    }
+
+    protected function getStub($name) {
+        return file_get_contents($this->getStubPath() . "/{$name}");
+    }
+
+    protected function populateStub($stub, $fillable, $rules, $messages) {
+        $stub = str_replace('{{model}}', $this->model_name, $stub);
+        $stub = str_replace('{{table}}', $this->table, $stub);
+        $stub = str_replace('{{timestamps}}', $this->timestamps, $stub);
+        $stub = str_replace('{{fillable}}', $fillable, $stub);
+        $stub = str_replace('{{rules}}', $rules, $stub);
+        $stub = str_replace('{{messages}}', $messages, $stub);
+        return $stub;
     }
 
 }

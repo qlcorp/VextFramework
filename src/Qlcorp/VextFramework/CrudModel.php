@@ -9,16 +9,6 @@ use \Validator;
 
 abstract class CrudModel extends \Eloquent {
 
-    /**
-     * Protect against mass assignment in both create() and update() functions
-     *
-     * Timestamps are updated automatically via ORM
-     * Can be overwritten in child
-     *
-     * @var array
-     */
-    protected $guarded = array('id', 'created_at', 'updated_at', 'deleted_at');
-
     //validation parameters to overwrite
     //validator will pass automatically if $rules is not defined in child
     protected $rules = array();
@@ -63,16 +53,6 @@ abstract class CrudModel extends \Eloquent {
         static::saving(function($model) {
             if ( !$model->validate() ) return false;
         });
-    }
-
-    public function fields() {
-        /*$schema = new VextBuilder();
-        $fields = new FieldBuilder();
-
-        $columns = $schema->columns($this->getTable());
-
-        $fields->add($columns);
-        return $fields;*/
     }
 
 
