@@ -41,6 +41,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         $this->bigInteger('parent_id')->nullable()->fillable();
         $this->bigInteger('index')->fillable();
         $this->string('text', 200)->fillable();
+        $this->unique(array('parent_id', 'index'));
         return $this;
     }
 
