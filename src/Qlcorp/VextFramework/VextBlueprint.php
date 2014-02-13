@@ -103,7 +103,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         foreach ($this->columns as $column) {
             $fields[] = $column->toArray();
         }
-        return array($fields);
+        return $fields;
     }
 
     public function laravelModel() {
