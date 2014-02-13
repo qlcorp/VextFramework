@@ -36,15 +36,25 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         return parent::timestamps();
     }
 
+    //todo: make this happen after blueprint is done so primarykey can be dynamic
     public function tree() {
         $this->tree = true;
+
         $this->bigInteger('parent_id')->nullable()->fillable();
         $this->bigInteger('index')->fillable();
         $this->string('text', 200)->fillable();
+
         $this->unique(array('parent_id', 'index'));
+
+        $this->foreign('parent_id')
+            ->references('id')
+            ->on($this->table)
+            ->onDelete('cascade');
+
         return $this;
     }
 
+    //todo: parentKey, parentTable, set foreignKey
     public function parent($parentKey) {
         $this->parentKey = $parentKey;
         return $this;
