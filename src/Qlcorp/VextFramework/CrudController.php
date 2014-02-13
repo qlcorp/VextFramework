@@ -63,7 +63,7 @@ abstract class CrudController extends BaseController {
      * @return string
      */
     public function getRead() {
-        // TODO: get by id, query
+        // TODO: parentKey search with/without Filter
         $Model = $this->Model;
         //Get single record by primary key
         if ( ($id = $this->getKeyFromInput()) !== null ) {

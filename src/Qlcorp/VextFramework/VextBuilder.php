@@ -16,6 +16,7 @@ class VextBuilder extends Builder {
     protected function build(Blueprint $blueprint) {
         //dd($blueprint->toJson());
         $this->writeModels($blueprint);
+        //todo: tree code here
 
         parent::build($blueprint);
     }
@@ -95,8 +96,6 @@ class VextBuilder extends Builder {
     public function createBlueprint($table, Closure $callback = null) {
         return new VextBlueprint($table, $callback);
     }
-
-
 
 }
 

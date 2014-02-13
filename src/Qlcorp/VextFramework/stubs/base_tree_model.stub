@@ -7,7 +7,7 @@ use Qlcorp\VextFramework\TreeModel;
 class Base{{model}} extends TreeModel {
     protected $table = '{{table}}';
     public $timestamps = {{timestamps}};
-    protected $parentKey = '{{parentKey}}';
+    public $parentKey = '{{parentKey}}';
 
     protected $fillable = array(
         {{fillable}}

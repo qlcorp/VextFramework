@@ -36,6 +36,10 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         return parent::timestamps();
     }
 
+    public function modified() {
+
+    }
+
     //todo: make this happen after blueprint is done so primarykey can be dynamic
     public function tree() {
         $this->tree = true;
@@ -43,6 +47,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         $this->bigInteger('parent_id')->nullable()->fillable();
         $this->bigInteger('index')->fillable();
         $this->string('text', 200)->fillable();
+        $this->boolean('leaf')->fillable();
 
         $this->unique(array('parent_id', 'index'));
 
@@ -103,6 +108,14 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         foreach ($this->columns as $column) {
             $fields[] = $column->toArray();
         }
+
+        if ($this->tree) {
+            $fields[] = array(
+                'name' => 'root',
+                'type' => 'boolean'
+            );
+        }
+
         return $fields;
     }
 
