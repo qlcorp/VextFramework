@@ -44,14 +44,17 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     public function tree() {
         $this->tree = true;
 
-        $this->bigInteger('parent_id')->nullable()->fillable();
-        $this->bigInteger('index')->fillable();
-        $this->string('text', 200)->fillable();
-        $this->boolean('leaf')->fillable();
+        $this->bigInteger('parentId')->nullable()->fillable();
+        $this->bigInteger('index')->fillable()->required();
 
-        $this->unique(array('parent_id', 'index'));
+        //$this->string('text', 200)->fillable()->required();
 
-        $this->foreign('parent_id')
+        $this->boolean('leaf')->fillable()->required();
+
+        //Composite Unique Key ParentId-Index
+        $this->unique(array('parentId', 'index'));
+
+        $this->foreign('parentId')
             ->references('id')
             ->on($this->table)
             ->onDelete('cascade');
