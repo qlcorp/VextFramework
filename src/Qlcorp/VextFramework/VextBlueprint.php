@@ -54,7 +54,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         return $this;
     }
 
-    //todo: parentKey, parentTable, set foreignKey
+    //todo: make this a function of VextFluent for foreignKey purposes
     public function parent($parentKey) {
         $this->parentKey = $parentKey;
         return $this;
@@ -103,7 +103,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         foreach ($this->columns as $column) {
             $fields[] = $column->toArray();
         }
-        return array('fields' => $fields);
+        return array($fields);
     }
 
     public function laravelModel() {

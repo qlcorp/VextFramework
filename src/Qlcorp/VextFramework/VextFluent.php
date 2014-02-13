@@ -49,6 +49,7 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
     }
 
     //Fillable
+    //todo: remove from json, addr readOnly field
     public function fillable() {
         return $this->blueprint->getCurrentColumn()->setFillable();
     }
