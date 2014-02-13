@@ -21,6 +21,7 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
     protected $required = null;
     protected $fillable = false;
     protected $fieldConfig = array();
+    protected $tree = false;
 
     public function __construct($attributes = array(), VextBlueprint $blueprint) {
         parent::__construct($attributes);
@@ -46,8 +47,8 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
     public function getRequired() {
         return $this->required;
     }
-    //Fillable
 
+    //Fillable
     public function fillable() {
         return $this->blueprint->getCurrentColumn()->setFillable();
     }
@@ -148,7 +149,6 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
     }
 
     protected function fieldConfig() {
-        //TODO: xtype?
         $field = array();
         $this->setOption($field, 'vtype', $this->vtype);
         $this->setOption($field, 'fieldLabel', $this->fieldLabel);

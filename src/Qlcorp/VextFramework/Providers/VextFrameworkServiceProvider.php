@@ -2,7 +2,8 @@
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
-//use Qlcorp\VextFramework\VextBuilder;
+use Qlcorp\VextFramework\VextBuilder;
+use Qlcorp\VextFramework\VextValidate;
 
 class VextFrameworkServiceProvider extends ServiceProvider {
 

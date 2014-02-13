@@ -3,7 +3,6 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Contracts\ArrayableInterface;
 use Illuminate\Support\Contracts\JsonableInterface;
-use Illuminate\Support\Facades\File;
 
 /**
  * Class VextBlueprint
@@ -24,14 +23,30 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     protected $model_name = '';
     protected $fillable = array();
     protected $timestamps = 'false';
+    protected $tree = false;
+    protected $parentKey = null;
 
     public function addFillable($col) {
         $this->fillable[] = $col;
+        return $this;
     }
 
     public function timestamps() {
         $this->timestamps = 'true';
         return parent::timestamps();
+    }
+
+    public function tree() {
+        $this->tree = true;
+        $this->bigInteger('parent_id')->nullable()->fillable();
+        $this->bigInteger('index')->fillable();
+        $this->string('text', 200)->fillable();
+        return $this;
+    }
+
+    public function parent($parentKey) {
+        $this->parentKey = $parentKey;
+        return $this;
     }
 
     /**
@@ -116,8 +131,15 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
 
         $rules = implode($rules, ",\r\n\t\t");
         $messages = implode($messages, "\r\n\t\t");
-        $stub = $this->getStub('base_model.stub');
-        return $this->populateStub($stub, $fillable, $rules, $messages);
+        if ($this->tree) {
+            $stub = $this->getStub('base_tree_model.stub');
+        } else {
+            $stub = $this->getStub('base_model.stub');
+        }
+
+        $parentKey = $this->parentKey;
+
+        return $this->populateStub($stub, compact('fillable', 'rules', 'messages', 'parentKey'));
 
     }
 
@@ -137,13 +159,14 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         return file_get_contents($this->getStubPath() . "/{$name}");
     }
 
-    protected function populateStub($stub, $fillable, $rules, $messages) {
+    protected function populateStub($stub, $data = array()) {
         $stub = str_replace('{{model}}', $this->model_name, $stub);
         $stub = str_replace('{{table}}', $this->table, $stub);
         $stub = str_replace('{{timestamps}}', $this->timestamps, $stub);
-        $stub = str_replace('{{fillable}}', $fillable, $stub);
-        $stub = str_replace('{{rules}}', $rules, $stub);
-        $stub = str_replace('{{messages}}', $messages, $stub);
+        $stub = str_replace('{{fillable}}', $data['fillable'], $stub);
+        $stub = str_replace('{{rules}}', $data['rules'], $stub);
+        $stub = str_replace('{{messages}}', $data['messages'], $stub);
+        $stub = str_replace('{{parentKey}}', $data['parentKey'], $stub);
         return $stub;
     }
 

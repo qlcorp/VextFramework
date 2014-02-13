@@ -6,14 +6,13 @@
  * Example:
  *      Class UserController extends this class
  *      Performs CRUD operations on User Model
- *
+ * todo: Handle ModelNotFoundException for FindOrFail()'s
  * @author Tony
  */
 
-use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Input;
 
-abstract class CrudController extends Controller {
+abstract class CrudController extends BaseController {
     /**
      * Class name of Model for this CRUD controller
      *
@@ -23,7 +22,7 @@ abstract class CrudController extends Controller {
      */
     protected $Model;
     protected $root;
-    private $model;
+    protected $model;
 
     /**
      * Implicitly constructs CrudController from child
@@ -186,33 +185,20 @@ abstract class CrudController extends Controller {
         return $id;
     }
 
-    /**
-     * Handle bad methods
-     *
-     * @param array $parameters
-     * @return mixed|void
-     */
-    public function missingMethod($parameters = array()) {
-        App::abort(404);
+    protected function success($records = null, $options = array()) {
+        if (!is_null($records)) {
+            $options[$this->root] = $records->toArray();
+        }
+        return parent::success($options);
     }
 
-    protected function success($records, $options = array()) {
-        return json_encode(array_merge(array(
-            'success' => true,
-            $this->root => $records->toArray(),
-        ), $options));
-    }
-
-    protected function failure($record, $message = "", $options = array()) {
-        return json_encode(
-            array_merge(
-                array(
-                    'success' => false,
-                    'message' => $message,
-                    $this->root => $record->toArray(),
-                ),
-                $options
-            )
-        );
+    protected function failure($record = null, $message = null, $options = array()) {
+        if ( !is_null($record) ) {
+            $options[$this->root] = $record->toArray();
+        }
+        if ( !is_null($message) ) {
+            $options['message'] = $message;
+        }
+        return parent::failure($options);
     }
 }
