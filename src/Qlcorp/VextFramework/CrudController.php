@@ -11,6 +11,8 @@
  */
 
 use Illuminate\Support\Facades\Input;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\App;
 
 abstract class CrudController extends BaseController {
     /**
@@ -40,7 +42,17 @@ abstract class CrudController extends BaseController {
         }
 
         $Model = $this->Model;
-        $this->model = new $Model;  //todo: use parent's __callStatic()
+        $this->model = new $Model;
+
+        $me = $this;
+
+        App::error(function(ModelNotFoundException $e) use ($me) {
+            return $me->failure(null, $e->getMessage());
+        });
+
+        App::error(function(\Exception $e) use ($me) {
+            return $me->failure(null, $e->getMessage());
+        });
     }
 
     /**
@@ -63,11 +75,18 @@ abstract class CrudController extends BaseController {
      * @return string
      */
     public function getRead() {
-        // TODO: parentKey search with/without Filter
         $Model = $this->Model;
+        $parentKey = $this->model->getParentKey();
+        $query = $this->model->newQuery();
+
+        if ( $parentKey ) {
+            $parentValue = Input::get($parentKey);
+            $query = $query->where($parentKey, $parentValue);
+        }
+
         //Get single record by primary key
         if ( ($id = $this->getKeyFromInput()) !== null ) {
-            $record = $Model::find($id);
+            $record = $query->find($id);
             if ( $record !== null ) {
                 return $this->success($record);
             } else {
@@ -79,8 +98,6 @@ abstract class CrudController extends BaseController {
         $filter = Input::get('filter');
         $limit =  Input::get('limit');
         $offset = Input::get('start', 0);
-
-        $query = $this->model->newQuery();
 
         if ( $filter ) $this->filterQuery($query, json_decode($filter));
 
@@ -176,7 +193,7 @@ abstract class CrudController extends BaseController {
      *
      * @return mixed
      */
-    private function getKeyFromInput() {
+    protected function getKeyFromInput() {
         $Model = $this->Model;
 
         $key = $this->model->getKeyName();
@@ -185,14 +202,14 @@ abstract class CrudController extends BaseController {
         return $id;
     }
 
-    protected function success($records = null, $options = array()) {
+    public function success($records = null, $options = array()) {
         if (!is_null($records)) {
             $options[$this->root] = $records->toArray();
         }
         return parent::success($options);
     }
 
-    protected function failure($record = null, $message = null, $options = array()) {
+    public function failure($record = null, $message = null, $options = array()) {
         if ( !is_null($record) ) {
             $options[$this->root] = $record->toArray();
         }

@@ -23,34 +23,70 @@ class TreeController extends CrudController {
 
     public function getRead() {
         $Model = $this->Model;
-        if ( !Input::has('node') ) {
-            return $this->failure();
-        }
 
-        $id = Input::get('node');
+        $parentKey = $this->model->getParentKey();
+        $parentValue = $parentKey ? Input::get($parentKey) : null;
 
-        if ( !is_null($parentKey = $this->model->parentKey) ) {
-            $parentKey = Input::get($parentKey);
-            $node = $this->getNode($id, $parentKey);
-        } else {
-            $node = $this->getNode($id);
+        if (isset($_GET['node'])) {  // Process request as tree
+            $node = Input::get('node');
+            $id = Input::get($this->model->getTable() . '_id');
+            $node = $this->getNode($id, $parentKey, $parentValue);
         }
+        else {
+            $node = $this->getRecords($parentKey);
+        }
+        /*
+                if ( $root ) {
+                    $node = $Model::create(Input::all());
+                }
+                else {
+                    if (!isset($_GET['node'])) {
+
+                    }
+                    else {
+                        if ( !is_null($parentKey) ) {
+                            $parentKey = Input::get($parentKey);
+                            $node = $this->getNode($id, $parentKey);
+                        }
+                        else {
+                            $node = $this->getNode($id);
+                        }
+                    }
+                }
+        */
+
 
         return $this->success($node);
     }
 
-    protected function getNode($id, $parentKey = null) {
+    protected function getRecords($parentKey = null, $parentValue = null) {
+        $query = $this->model->newQuery();
+
+        if ( $parentKey ) {
+            $query = $query->where($parentKey, $parentValue);
+        }
+
+        $node = $query->whereNull('parentId')->get();
+
+        return $node;
+    }
+
+
+    protected function getNode($id, $parentKey = null, $parentValue = null) {
+        $this->root = 'children';
         $Model = $this->Model;
         $query = $this->model->newQuery();
 
-        if ( !is_null($parentKey) ) {
-            $query->where($this->model->parentKey, $parentKey);
+        if ( $parentKey ) {
+            $query->where($parentKey, $parentValue);
         }
 
-        if ($id === 'root') {
+        //dd(Input::has('node'));
+
+        if ( $id === '' ) {  //Todo: check for non existent root & create if needed
             $node = $query->whereNull('parentId')->first();
             if ( !$node ) {
-                $node =  $this->createRoot($parentKey);
+                $node =  $this->createRoot($parentValue);
             }
         } else {
             $node = $query->find($id);

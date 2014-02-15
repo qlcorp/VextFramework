@@ -10,7 +10,6 @@ namespace Qlcorp\VextFramework;
 
 class TreeModel extends CrudModel {
     protected $appends = array('root');
-    public $parentKey = null;
 
     public function children() {
         return $this->hasMany(get_class($this), 'parentId')
@@ -41,6 +40,14 @@ class TreeModel extends CrudModel {
             return 0;
         } else {
             return $this->attributes['parentId'];
+        }
+    }
+
+    public function setParentIdAttribute($value) {
+        if ( $value === 0 ) {
+            $this->attributes['parentId'] = null;
+        } else {
+            $this->attributes['parentId'] = $value;
         }
     }
 

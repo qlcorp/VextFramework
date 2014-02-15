@@ -8,12 +8,16 @@
 use \Validator;
 
 abstract class CrudModel extends \Eloquent {
-
+    protected $parentKey = null;
     //validation parameters to overwrite
     //validator will pass automatically if $rules is not defined in child
     protected $rules = array();
     protected $messages = array();
     public $errors;
+
+    public function getParentKey() {
+        return $this->parentKey;
+    }
 
     /**
      * Validates generation input
