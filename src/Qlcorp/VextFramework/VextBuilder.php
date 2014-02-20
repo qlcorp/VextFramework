@@ -17,8 +17,9 @@ class VextBuilder extends Builder {
         //dd($blueprint->toJson());
         $this->writeModels($blueprint);
         //todo: tree code here
-
-        parent::build($blueprint);
+        if ( !$blueprint->isPretend() ) {
+            parent::build($blueprint);
+        }
     }
 
     protected function writeModels($blueprint) {

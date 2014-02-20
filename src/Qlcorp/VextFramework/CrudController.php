@@ -79,7 +79,7 @@ abstract class CrudController extends BaseController {
         $parentKey = $this->model->getParentKey();
         $query = $this->model->newQuery();
 
-        if ( $parentKey ) {
+        if ( $parentKey && Input::has($parentKey) ) {
             $parentValue = Input::get($parentKey);
             $query = $query->where($parentKey, $parentValue);
         }

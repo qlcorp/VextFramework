@@ -11,10 +11,15 @@ namespace Qlcorp\VextFramework;
 class TreeModel extends CrudModel {
     protected $appends = array('root');
 
-    public function children() {
+    //Relationships
+    public function directChildren() {
         return $this->hasMany(get_class($this), 'parentId')
-            ->with('children')
             ->orderBy('index');
+    }
+
+    public function children() {
+        return $this->directChildren()
+            ->with('children');
     }
 
     public function parent() {
@@ -49,6 +54,18 @@ class TreeModel extends CrudModel {
         } else {
             $this->attributes['parentId'] = $value;
         }
+    }
+
+    public function toArray()
+    {
+        if ( isset($this->relations['directChildren']) ) {
+            if ( !isset($this->relations['children']) ) {
+                $this->relations['children'] = $this->relations['directChildren'];
+                unset($this->relations['directChildren']);
+            }
+        }
+
+        return parent::toArray();
     }
 
 } 

@@ -11,13 +11,9 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
     protected $blueprint = null;
 
     // -- column ---
-    protected $grid = null;
+    protected $gridConfig = null;
     protected $rules = array();
     protected $dropdown = array();
-    protected $vtype = null;
-    protected $fieldLabel = null;
-    protected $fieldWidth = null;
-    protected $regex = null;
     protected $required = null;
     protected $fillable = false;
     protected $fieldConfig = array();
@@ -66,7 +62,9 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
     }
 
     protected function setRequired($required) {
-        $this->required = (bool) $required;
+        $required = (bool) $required;
+        $this->fieldConfig['allowBlank'] = !$required;
+        $this->required = $required;
         return $this;
     }
 
@@ -76,28 +74,27 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
     }
 
     protected function setRegex($regex) {
-        $this->regex = $regex;
+        $this->fieldConfig['regex'] = $regex;
         return $this;
     }
 
     //Field Label/Width
-    public function field($label, $width = null) {
-        return $this->blueprint->getCurrentColumn()->setField($label, $width);
+    public function fieldConfig($config = array()) {
+        return $this->blueprint->getCurrentColumn()->setFieldConfig($config);
     }
 
-    protected function setField($label, $width) {
-        $this->fieldLabel = $label;
-        $this->fieldWidth = $width;
+    protected function setFieldConfig($config = array()) {
+        $this->fieldConfig = array_merge($this->fieldConfig, $config);
         return $this;
     }
 
     //Grid
-    public function grid($name, $length = null) {
-        return $this->blueprint->getCurrentColumn()->setGrid($name, $length);
+    public function gridConfig($configs = array()) {
+        return $this->blueprint->getCurrentColumn()->setGridConfig($configs);
     }
 
-    protected function setGrid($title, $width = null) {
-        $this->grid = compact('title', 'width');
+    protected function setGridConfig($configs = array()) {
+        $this->gridConfig = $configs;
         return $this;
     }
 
@@ -119,7 +116,7 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
     }
 
     protected function setVtype($vtype) {
-        $this->vtype = $vtype;
+        $this->fieldConfig['vtype'] = $vtype;
         return $this;
     }
 
@@ -142,23 +139,10 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
     public function toArray() {
         $this->setOption($field, 'name', $this->getName());
         $this->setOption($field, 'type', $this->getType());
-        $this->setOption($field, 'fieldConfig', $this->fieldConfig());
-        $this->setOption($field, 'grid', $this->grid);
+        $this->setOption($field, 'fieldConfig', $this->fieldConfig);
+        $this->setOption($field, 'gridConfig', $this->gridConfig);
         $this->setOption($field, 'dropdown', $this->dropdown);
 
-        return $field;
-    }
-
-    protected function fieldConfig() {
-        $field = array();
-        $this->setOption($field, 'vtype', $this->vtype);
-        $this->setOption($field, 'fieldLabel', $this->fieldLabel);
-        $this->setOption($field, 'fieldWidth', $this->fieldWidth);
-        $this->setOption($field, 'regex', $this->regex);
-        $this->setOption($field, 'allowBlank', $this->required, !$this->required);
-        $this->setOption($field, 'fillable', $this->fillable);
-
-        $this->fieldConfig = $field = array_merge($field, $this->rules);
         return $field;
     }
 

@@ -1,6 +1,7 @@
 <?php namespace Qlcorp\VextFramework;
 
 use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\DB;
 
 class TreeController extends CrudController {
 
@@ -33,7 +34,7 @@ class TreeController extends CrudController {
             $node = $this->getNode($id, $parentKey, $parentValue);
         }
         else {
-            $node = $this->getRecords($parentKey);
+            $node = $this->getRecords($parentKey, $parentValue);
         }
         /*
                 if ( $root ) {
@@ -60,6 +61,7 @@ class TreeController extends CrudController {
     }
 
     protected function getRecords($parentKey = null, $parentValue = null) {
+        $this->root = $this->model->getTable();
         $query = $this->model->newQuery();
 
         if ( $parentKey ) {
@@ -77,7 +79,7 @@ class TreeController extends CrudController {
         $Model = $this->Model;
         $query = $this->model->newQuery();
 
-        if ( $parentKey ) {
+        if ( $parentKey && !is_null($parentValue) ) {
             $query->where($parentKey, $parentValue);
         }
 
@@ -102,26 +104,32 @@ class TreeController extends CrudController {
     public function postMove() {
         $Model = $this->Model;
 
-        $oldParentId = Input::get('oldParentId');
-        $newParentId = Input::get('newParentId');
-        $node = Input::get('node');
-        $id = Input::get('id');
-        $newIndex = Input::get('index');
+        DB::transaction(function() use ($Model) {
 
-        $oldNode = $Model::findOrFail($id);
-        $oldIndex = $oldNode->index;
+            $id = Input::get('id');
+            $oldParentId = Input::get('oldParentId');
+            $newParentId = Input::get('newParentId');
+            $newIndex = Input::get('newIndex');
 
-        $oldNode->delete();
+            $node = $Model::findOrFail($id);
+            $oldIndex = $node->index;
 
-        $Model::where('parentId', $oldParentId)
-            ->where('index', '>', $oldIndex)
-            ->decrement('index');
+            //$node->delete();
 
-        $Model::where('parentId', $newParentId)
-            ->where('index', '>=', $newIndex)
-            ->increment('index');
+            $Model::where('parentId', $oldParentId)
+                ->where('index', '>', $oldIndex)
+                ->decrement('index');
 
-        $Model::create($node);
+            $Model::where('parentId', $newParentId)
+                ->where('index', '>=', $newIndex)
+                ->increment('index');
+
+            $node->index = $newIndex;
+            $node->parentId = $newParentId;
+            $node->save();
+        });
+
+
     }
 
 

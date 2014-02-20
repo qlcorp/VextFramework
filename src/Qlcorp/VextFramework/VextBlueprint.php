@@ -25,6 +25,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     protected $timestamps = 'false';
     protected $tree = false;
     protected $parentKey = null;
+    protected $pretend = false;
 
     public function addFillable($col) {
         $this->fillable[] = $col;
@@ -36,8 +37,17 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         return parent::timestamps();
     }
 
-    public function modified() {
+    public function userstamps() {
 
+    }
+
+    public function pretend() {
+        $this->pretend = true;
+        return $this->pretend;
+    }
+
+    public function isPretend() {
+        return $this->pretend;
     }
 
     //todo: make this happen after blueprint is done so primarykey can be dynamic
@@ -52,7 +62,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         $this->boolean('leaf')->fillable()->required();
 
         //Composite Unique Key ParentId-Index
-        $this->unique(array('parentId', 'index'));
+        //$this->unique(array('parentId', 'index'));
 
         $this->foreign('parentId')
             ->references('id')
