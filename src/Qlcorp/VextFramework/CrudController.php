@@ -38,7 +38,7 @@ abstract class CrudController extends BaseController {
         }
         //todo: use existing Laravel function getBaseClass()
         if ( !$this->root ) {
-            $this->root = lcfirst($this->Model) . 's';
+            $this->root = lcfirst($this->Model);
         }
 
         $Model = $this->Model;

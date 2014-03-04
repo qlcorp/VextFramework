@@ -18,10 +18,15 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
     protected $fillable = false;
     protected $fieldConfig = array();
     protected $tree = false;
+    protected $lookup = null;
 
     public function __construct($attributes = array(), VextBlueprint $blueprint) {
         parent::__construct($attributes);
         $this->blueprint = $blueprint;
+    }
+
+    public function getLookup() {
+        return $this->lookup;
     }
 
     public function getRules() {
@@ -42,6 +47,19 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
 
     public function getRequired() {
         return $this->required;
+    }
+
+    //Lookup
+    public function lookup($model, $param = null) {
+        return $this->blueprint->getCurrentColumn()->setLookup($model, $param);
+    }
+
+    public function setLookup($model, $param = null) {
+        $this->lookup = compact('model');
+        if ( !is_null($param) ) {
+            $this->lookup['param'] = $param;
+        }
+        return $this;
     }
 
     //Fillable
@@ -142,7 +160,7 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
         $this->setOption($field, 'fieldConfig', $this->fieldConfig);
         $this->setOption($field, 'gridConfig', $this->gridConfig);
         $this->setOption($field, 'dropdown', $this->dropdown);
-
+        $this->setOption($field, 'lookup', $this->lookup);
         return $field;
     }
 

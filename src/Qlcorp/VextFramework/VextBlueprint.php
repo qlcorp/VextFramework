@@ -38,7 +38,13 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     }
 
     public function userstamps() {
+        $this->integer('created_by');  //remove later
+        $this->integer('updated_by')->nullable();
 
+        $this->foreign('created_by')->references('id')->on('users');
+        $this->foreign('updated_by')->references('id')->on('users');
+
+        return $this;
     }
 
     public function pretend() {
@@ -176,8 +182,34 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
 
         $parentKey = $this->parentKey;
 
-        return $this->populateStub($stub, compact('fillable', 'rules', 'messages', 'parentKey'));
+        $stub = $this->populateStub($stub, compact('fillable', 'rules', 'messages', 'parentKey'));
+        $stub = $this->addRelationships($stub);
+        return $stub;
 
+    }
+
+    protected function addRelationships($stub) {
+        $relationships = array();
+        $with = array();
+        $columns = $this->getColumns();
+        foreach($columns as $col) {
+            if ( !is_null($lookup = $col->getLookup()) ) {
+                $name = camel_case($lookup['model']);
+                $model = studly_case($name);
+                $relationship = "public function {$name}() {\n" .
+                "\t\t" . 'return $this->belongsTo("'. $model .'", "'. $col->getName() .'");' .
+                "\n\t}\n";
+                $relationships[] = $relationship;
+                $with[] = $name;
+            }
+        }
+
+        $relationships = implode('\n\n', $relationships);
+        $with = '\'' . implode('\', \'', $with) . '\'';
+        $stub = str_replace('{{relationships}}', $relationships, $stub);
+        $stub = str_replace('{{with}}', $with, $stub);
+
+        return $stub;
     }
 
     protected function addRule(&$laravelRules, $extJsRules, $laravelName, $extJsName) {

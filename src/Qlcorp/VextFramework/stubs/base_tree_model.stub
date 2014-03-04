@@ -8,6 +8,7 @@ class Base{{model}} extends TreeModel {
     protected $table = '{{table}}';
     public $timestamps = {{timestamps}};
     protected $parentKey = '{{parentKey}}';
+    protected $with = array({{with}});
 
     protected $fillable = array(
         {{fillable}}
@@ -18,5 +19,7 @@ class Base{{model}} extends TreeModel {
     protected $messages = array(
         {{messages}}
     );
+
+    {{relationships}}
 
 }

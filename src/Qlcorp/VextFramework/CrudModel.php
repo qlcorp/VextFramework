@@ -5,7 +5,8 @@
  * @author Tony
  */
 
-use \Validator;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 abstract class CrudModel extends \Eloquent {
     protected $parentKey = null;
@@ -17,6 +18,14 @@ abstract class CrudModel extends \Eloquent {
 
     public function getParentKey() {
         return $this->parentKey;
+    }
+
+    public function updatedByUser() {
+        return $this->belongsTo('User', 'updated_by');
+    }
+
+    public function createdByUser() {
+        return $this->belongsTo('User', 'created_by');
     }
 
     /**
@@ -57,7 +66,22 @@ abstract class CrudModel extends \Eloquent {
         static::saving(function($model) {
             if ( !$model->validate() ) return false;
         });
-    }
 
+        static::creating(function($model) {
+            if (!Auth::guest()) {
+                $model->created_by = Auth::user()->id;
+            } else {
+                $model->created_by = 1;
+            }
+        });
+
+        static::updating(function($model) {
+            if (!Auth::guest()) {
+                $model->updated_by = Auth::user()->id;
+            } else {
+                $model->update_by = 1;
+            }
+        });
+    }
 
 }
