@@ -205,7 +205,11 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         }
 
         $relationships = implode('\n\n', $relationships);
-        $with = '\'' . implode('\', \'', $with) . '\'';
+        if (!empty($with)) {
+            $with = '\'' . implode('\', \'', $with) . '\'';
+        } else {
+            $with = '';
+        }
         $stub = str_replace('{{relationships}}', $relationships, $stub);
         $stub = str_replace('{{with}}', $with, $stub);
 
