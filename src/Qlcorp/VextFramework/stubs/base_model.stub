@@ -9,6 +9,7 @@ class Base{{model}} extends CrudModel {
     public $timestamps = {{timestamps}};
     protected $parentKey = '{{parentKey}}';
     protected $with = array({{with}});
+    protected $userstamps = {{userstamps}};
 
     protected $fillable = array(
         {{fillable}}

@@ -23,9 +23,18 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     protected $model_name = '';
     protected $fillable = array();
     protected $timestamps = 'false';
+    protected $userstamps = 'false';
     protected $tree = false;
     protected $parentKey = null;
     protected $pretend = false;
+    protected $relationships = array();
+    protected $with = array();
+
+    public function hasMany($related, $foreignKey = null, $localKey = null) {
+        $type = 'hasMany';
+        $this->relationships[] = compact('type', 'related', 'foreignKey', 'localKey');
+        $this->with[] = $related;
+    }
 
     public function addFillable($col) {
         $this->fillable[] = $col;
@@ -43,6 +52,8 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
 
         $this->foreign('created_by')->references('id')->on('users');
         $this->foreign('updated_by')->references('id')->on('users');
+
+        $this->userstamps = 'true';
 
         return $this;
     }
@@ -118,26 +129,6 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         return $this->current_name;
     }
 
-    public function toJson($options = 0) {
-        return json_encode($this->toArray());
-    }
-
-    public function toArray() {
-        $fields = array();
-        foreach ($this->columns as $column) {
-            $fields[] = $column->toArray();
-        }
-
-        if ($this->tree) {
-            $fields[] = array(
-                'name' => 'root',
-                'type' => 'boolean'
-            );
-        }
-
-        return $fields;
-    }
-
     public function laravelModel() {
         $stub = $this->getStub('model.stub');
         $stub = str_replace('{{model}}', $this->model_name , $stub);
@@ -189,8 +180,19 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     }
 
     protected function addRelationships($stub) {
-        $relationships = array();
-        $with = array();
+        $relationships = $this->relationships;
+
+        foreach ($relationships as &$relationship) {
+            $name = camel_case($relationship['related']);
+            $model = studly_case($name);
+            $type = $relationship['type'];
+            $param_array = array($model, $relationship['foreignKey'], $relationship['localKey']);
+            $params = "'" . implode("','", array_filter($param_array)) . "'";
+            $relationship = "public function {$name}() {\n" .
+            "\t\t" . 'return $this->'. $type . "($params);" .
+            "\n\t}\n";
+        }
+
         $columns = $this->getColumns();
         foreach($columns as $col) {
             if ( !is_null($lookup = $col->getLookup()) ) {
@@ -200,18 +202,18 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
                 "\t\t" . 'return $this->belongsTo("'. $model .'", "'. $col->getName() .'");' .
                 "\n\t}\n";
                 $relationships[] = $relationship;
-                $with[] = $name;
+                $this->with[] = $name;
             }
         }
 
         $relationships = implode('\n\n', $relationships);
-        if (!empty($with)) {
-            $with = '\'' . implode('\', \'', $with) . '\'';
+        if (!empty($this->with)) {
+            $this->with = '\'' . implode('\', \'', $this->with) . '\'';
         } else {
-            $with = '';
+            $this->with = '';
         }
         $stub = str_replace('{{relationships}}', $relationships, $stub);
-        $stub = str_replace('{{with}}', $with, $stub);
+        $stub = str_replace('{{with}}', $this->with, $stub);
 
         return $stub;
     }
@@ -240,7 +242,37 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         $stub = str_replace('{{rules}}', $data['rules'], $stub);
         $stub = str_replace('{{messages}}', $data['messages'], $stub);
         $stub = str_replace('{{parentKey}}', $data['parentKey'], $stub);
+        $stub = str_replace('{{userstamps}}', $this->userstamps, $stub);
         return $stub;
+    }
+
+
+    public function toJson($options = 0) {
+        return json_encode($this->toArray());
+    }
+
+    public function toArray() {
+        $fields = array();
+        $model = array();
+
+        foreach ($this->columns as $column) {
+            $fields[] = $column->toArray();
+        }
+
+        if ($this->tree) {
+            $fields[] = array(
+                'name' => 'root',
+                'type' => 'boolean'
+            );
+        }
+
+        $model = compact('fields');
+        $relationships = $this->relationships;
+        foreach($relationships as $relationship) {
+            $model[$relationship['type']][] = $relationship['related'];
+        }
+
+        return $model;
     }
 
 }

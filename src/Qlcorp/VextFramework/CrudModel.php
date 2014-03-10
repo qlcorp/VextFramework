@@ -62,26 +62,31 @@ abstract class CrudModel extends \Eloquent {
      */
     public static function boot() {
         parent::boot();
+        $instance = new static;
+
         //Halt saving if validation fails
         static::saving(function($model) {
             if ( !$model->validate() ) return false;
         });
 
-        static::creating(function($model) {
-            if (!Auth::guest()) {
-                $model->created_by = Auth::user()->id;
-            } else {
-                $model->created_by = 1;
-            }
-        });
+        if ($instance->userstamps) {
+            static::creating(function($model) {
+                if (!Auth::guest()) {
+                    $model->created_by = Auth::user()->id;
+                } else {
+                    $model->created_by = 1;
+                }
+            });
 
-        static::updating(function($model) {
-            if (!Auth::guest()) {
-                $model->updated_by = Auth::user()->id;
-            } else {
-                $model->update_by = 1;
-            }
-        });
+            static::updating(function($model) {
+                if (!Auth::guest()) {
+                    $model->updated_by = Auth::user()->id;
+                } else {
+                    $model->update_by = 1;
+                }
+            });
+        }
+
     }
 
 }
