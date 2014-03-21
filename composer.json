@@ -1,12 +1,17 @@
 {
     "name": "qlcorp/vext-framework",
-    "description": "A CRUD framework to integrate Laravel with ExtJS",
+    "description": "Interfaces Laravel with ExtJs",
     "license": "MIT",
     "version": "1.0.0",
+    "keywords": ["laravel", "extjs", "crud"],
     "authors": [
         {
-            "name": "Quantum Logic Corporation",
-            "email": "vext@qlcorp.net"
+            "name": "John Carbone",
+            "email": "john@qlcorp.net"
+        },
+        {
+            "name": "Tony Arra",
+            "email": "tony@qlcorp.net"
         }
     ],
     "require": {
