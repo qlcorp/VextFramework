@@ -1,6 +1,4 @@
-<?php
-
-namespace Qlcorp\VextFramework;
+<?php namespace Qlcorp\VextFramework;
 
 use Illuminate\Support\Facades\App;
 use Illuminate\Routing\Controller;

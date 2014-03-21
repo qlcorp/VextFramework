@@ -20,11 +20,11 @@ abstract class CrudModel extends \Eloquent {
         return $this->parentKey;
     }
 
-    public function updatedByUser() {
+    public function updatedBy() {
         return $this->belongsTo('User', 'updated_by');
     }
 
-    public function createdByUser() {
+    public function createdBy() {
         return $this->belongsTo('User', 'created_by');
     }
 
@@ -73,8 +73,10 @@ abstract class CrudModel extends \Eloquent {
             static::creating(function($model) {
                 if (!Auth::guest()) {
                     $model->created_by = Auth::user()->id;
+                    $model->updated_by = Auth::user()->id;
                 } else {
                     $model->created_by = 1;
+                    $model->updated_by = 1;
                 }
             });
 

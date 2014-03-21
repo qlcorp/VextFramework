@@ -54,6 +54,8 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         $this->foreign('updated_by')->references('id')->on('users');
 
         $this->userstamps = 'true';
+        $this->with[] = 'createdBy';
+        $this->with[] = 'updatedBy';
 
         return $this;
     }

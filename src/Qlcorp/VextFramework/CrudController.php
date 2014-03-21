@@ -6,7 +6,6 @@
  * Example:
  *      Class UserController extends this class
  *      Performs CRUD operations on User Model
- * todo: Handle ModelNotFoundException for FindOrFail()'s
  * @author Tony
  */
 

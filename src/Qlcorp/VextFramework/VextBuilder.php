@@ -14,6 +14,7 @@ class VextBuilder extends Builder {
     protected static $fileName = 'extJsModel.json';
 
     protected function build(Blueprint $blueprint) {
+        //dd("does this get called?");
         //dd($blueprint->toJson());
         $this->writeModels($blueprint);
         //todo: tree code here
@@ -48,7 +49,8 @@ class VextBuilder extends Builder {
         $modelName = $blueprint->getModel();
 
         if ($modelName === '') {
-            $modelName = str_singular(studly_case($table));
+            //$modelName = str_singular(studly_case($table));
+            $modelName = studly_case($table);
             $blueprint->model($modelName);
         }
 

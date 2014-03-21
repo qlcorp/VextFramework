@@ -2,8 +2,10 @@
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
+use Qlcorp\VextFramework\Console\GenerateModelsCommand;
 use Qlcorp\VextFramework\VextBuilder;
 use Qlcorp\VextFramework\VextValidate;
+use Qlcorp\VextFramework\VextMigrator;
 
 class VextFrameworkServiceProvider extends ServiceProvider {
 
@@ -39,6 +41,14 @@ class VextFrameworkServiceProvider extends ServiceProvider {
             return new VextValidate();
         });
 
+        $this->app->bindShared('command.migrate.generate', function($app) {
+            $packagePath = $app['path.base'].'/vendor';
+            $repository = $app['migration.repository'];
+            $migrator = new VextMigrator($repository, $app['db'], $app['files']);
+            return new GenerateModelsCommand($migrator, $packagePath);
+        });
+
+        $this->commands('command.migrate.generate');
 	}
 
 	/**
@@ -48,7 +58,7 @@ class VextFrameworkServiceProvider extends ServiceProvider {
 	 */
 	public function provides()
 	{
-		return array();
+		return array('VextSchema', 'VextValidate', 'command.migrate.generate');
 	}
 
 }
