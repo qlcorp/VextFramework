@@ -45,6 +45,10 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
         return $this->attributes['type'];
     }
 
+    public function getNullable() {
+        return isset($this->attributes['nullable']);
+    }
+
     public function getRequired() {
         return $this->required;
     }
@@ -157,6 +161,7 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
     public function toArray() {
         $this->setOption($field, 'name', $this->getName());
         $this->setOption($field, 'type', $this->getType());
+        $this->setOption($field, 'useNull', $this->getNullable());
         $this->setOption($field, 'fieldConfig', $this->fieldConfig);
         $this->setOption($field, 'gridConfig', $this->gridConfig);
         $this->setOption($field, 'dropdown', $this->dropdown);
