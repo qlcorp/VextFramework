@@ -1,10 +1,21 @@
-LaravExt Framework
-=============
+# LaravExt Framework
 
-A framework for interfacing Laravel with ExtJs. Provides CRUD and Tree functionality.
--------------
+- [Configuration](#configuration)
 
-###Installing LaravExt
-Add "qlcorp/vext-framework": "dev-master" to the "require" object in your project's composer.json file.
-Run "composer install" and "composer update".
+<a name="configuration"></a>
+## Configuration
 
+> **Note:** Requires PHP 5.3 or greater.
+
+LaravExt interfaces Laravel with ExtJs for rapid-development.
+Both CRUD and Tree functionality is provided
+
+#### Composer
+
+First, add the VextFramework package to your `composer.json` file:
+
+    "qlcorp/vext-framework": "dev-master"
+
+#### Service Provider
+
+Next, register the `Qlcorp\VextFramework\Providers\VextFrameworkServiceProvider` in your `app` configuration file.

@@ -40,6 +40,7 @@ class GenerateModelsCommand extends MigrateCommand {
 	{
 
         $build = (bool) $this->input->getOption('build');
+        $seed = (bool) $this->input->getOption('seed');
         $pretend = !$build;
 
         if ($build) {
@@ -50,6 +51,8 @@ class GenerateModelsCommand extends MigrateCommand {
                 $args['--' . $option] = $value;
             }
             $this->call('migrate', $args);
+        } else if ($seed) {
+            $this->call('db:seed'); //todo: add args
         }
 
         $path = $this->getMigrationPath();
@@ -62,6 +65,8 @@ class GenerateModelsCommand extends MigrateCommand {
         {
             $this->output->writeln($note);
         }
+
+        $this->call('dump-autoload');
 
 	}
 

@@ -41,21 +41,34 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         return $this;
     }
 
+    public function timestamp($column) {
+        return parent::timestamp($column)
+            ->fieldConfig(array(
+                'fieldLabel' => ucfirst(str_replace('_', ' ', $column))
+            ));
+    }
+
     public function timestamps() {
         $this->timestamps = 'true';
         return parent::timestamps();
     }
 
+    public function userstamp($column) {
+        //$this->with[] = camel_case($column);
+        $this->integer($column)
+            ->fieldConfig(array(
+                'fieldLabel' => ucfirst(str_replace('_', ' ', $column))
+            ));
+
+        $this->foreign($column)
+            ->references('id')->on('users');
+    }
+
     public function userstamps() {
-        $this->integer('created_by');  //remove later
-        $this->integer('updated_by')->nullable();
-
-        $this->foreign('created_by')->references('id')->on('users');
-        $this->foreign('updated_by')->references('id')->on('users');
-
         $this->userstamps = 'true';
-        $this->with[] = 'createdBy';
-        $this->with[] = 'updatedBy';
+
+        $this->userstamp('created_by');
+        $this->userstamp('updated_by');
 
         return $this;
     }

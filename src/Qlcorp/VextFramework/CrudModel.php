@@ -84,7 +84,7 @@ abstract class CrudModel extends \Eloquent {
                 if (!Auth::guest()) {
                     $model->updated_by = Auth::user()->id;
                 } else {
-                    $model->update_by = 1;
+                    $model->updated_by = 1;
                 }
             });
         }
