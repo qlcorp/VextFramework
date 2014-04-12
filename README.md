@@ -12,9 +12,9 @@ Both CRUD and Tree functionality is provided
 
 #### Composer
 
-First, add the VextFramework package to your `composer.json` file:
+First, use `composer require` to install the framework
 
-    "qlcorp/vext-framework": "dev-master"
+    composer require qlcorp/vext-framework dev-master
 
 #### Service Provider
 

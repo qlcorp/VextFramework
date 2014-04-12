@@ -33,7 +33,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     public function hasMany($related, $foreignKey = null, $localKey = null) {
         $type = 'hasMany';
         $this->relationships[] = compact('type', 'related', 'foreignKey', 'localKey');
-        $this->with[] = $related;
+        $this->with[] = camel_case($related);
     }
 
     public function addFillable($col) {
@@ -196,14 +196,15 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
 
     protected function addRelationships($stub) {
         $relationships = $this->relationships;
+        $relation_stubs = array();
 
-        foreach ($relationships as &$relationship) {
+        foreach ($relationships as $relationship) {
             $name = camel_case($relationship['related']);
             $model = studly_case($name);
             $type = $relationship['type'];
             $param_array = array($model, $relationship['foreignKey'], $relationship['localKey']);
             $params = "'" . implode("','", array_filter($param_array)) . "'";
-            $relationship = "public function {$name}() {\n" .
+            $relation_stubs[] = "public function {$name}() {\n" .
             "\t\t" . 'return $this->'. $type . "($params);" .
             "\n\t}\n";
         }
@@ -216,13 +217,13 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
                 $relationship = "public function {$name}() {\n" .
                 "\t\t" . 'return $this->belongsTo("'. $model .'", "'. $col->getName() .'");' .
                 "\n\t}\n";
-                $relationships[] = $relationship;
+                $relation_stubs[] = $relationship;
                 $this->with[] = $name;
             }
         }
 
-        $relationships = implode('\n\n', $relationships);
-        if (!empty($this->with)) {
+        $relationships = implode("\n\n", $relation_stubs);
+        if ( !empty($this->with) ) {
             $this->with = '\'' . implode('\', \'', $this->with) . '\'';
         } else {
             $this->with = '';

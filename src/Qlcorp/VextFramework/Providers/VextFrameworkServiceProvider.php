@@ -41,6 +41,12 @@ class VextFrameworkServiceProvider extends ServiceProvider {
             return new VextValidate();
         });
 
+        $this->app->booting(function(){
+            $loader = \Illuminate\Foundation\AliasLoader::getInstance();
+            $loader->alias('VextSchema', 'Qlcorp\VextFramework\Facades\VextSchema');
+            $loader->alias('VextValidate', 'Qlcorp\VextFramework\Facades\VextValidate');
+        });
+
         $this->app->bindShared('command.migrate.generate', function($app) {
             $packagePath = $app['path.base'].'/vendor';
             $repository = $app['migration.repository'];
