@@ -85,7 +85,7 @@ class TreeController extends CrudController {
 
         //dd(Input::has('node'));
 
-        if ( $id === '' ) {  //Todo: check for non existent root & create if needed
+        if ( is_null($id) || ($id === '') ) {  //Todo: check for non existent root & create if needed
             $node = $query->whereNull('parentId')->first();
             if ( !$node ) {
                 $node =  $this->createRoot($parentValue);
