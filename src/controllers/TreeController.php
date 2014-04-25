@@ -36,26 +36,6 @@ class TreeController extends CrudController {
         else {
             $node = $this->getRecords($parentKey, $parentValue);
         }
-        /*
-                if ( $root ) {
-                    $node = $Model::create(Input::all());
-                }
-                else {
-                    if (!isset($_GET['node'])) {
-
-                    }
-                    else {
-                        if ( !is_null($parentKey) ) {
-                            $parentKey = Input::get($parentKey);
-                            $node = $this->getNode($id, $parentKey);
-                        }
-                        else {
-                            $node = $this->getNode($id);
-                        }
-                    }
-                }
-        */
-
 
         return $this->success($node);
     }
