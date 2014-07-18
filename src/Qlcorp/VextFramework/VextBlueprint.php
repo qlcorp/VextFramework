@@ -29,6 +29,15 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     protected $pretend = false;
     protected $relationships = array();
     protected $with = array();
+    protected $appends = array();
+
+    public function appends($attributes) {
+        if ( !is_array($attributes) ) {
+            $attributes = func_get_args();
+        }
+
+        $this->appends = array_merge($this->appends, $attributes);
+    }
 
     public function hasMany($related, $foreignKey = null, $localKey = null) {
         $type = 'hasMany';
@@ -212,12 +221,20 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         $columns = $this->getColumns();
         foreach($columns as $col) {
             if ( !is_null($lookup = $col->getLookup()) ) {
-                $name = camel_case($lookup['model']);
-                $model = studly_case($name);
+                if ( isset($lookup['name']) ) {
+                    $name = camel_case($lookup['name']);
+                } else {
+                    $name = camel_case($lookup['model']);
+                }
+
+                $model = studly_case($lookup['model']);
+
                 $relationship = "public function {$name}() {\n" .
                 "\t\t" . 'return $this->belongsTo("'. $model .'", "'. $col->getName() .'");' .
                 "\n\t}\n";
+
                 $relation_stubs[] = $relationship;
+
                 $this->with[] = $name;
             }
         }

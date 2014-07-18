@@ -18,8 +18,11 @@ class TreeModel extends CrudModel {
     }
 
     public function children() {
-        return $this->directChildren()
+        return $this->hasMany(get_class($this), 'parentId')
+            ->orderBy('index')
             ->with('children');
+        /*return $this->directChildren()
+            ->with('children');*/
     }
 
     public function parent() {
@@ -28,8 +31,8 @@ class TreeModel extends CrudModel {
 
     public function getRootAttribute() {
         //todo: switch statements when getParentIdAttribute is removed
-        //return !isset($this->attributes['parentId']);
-        return $this->attributes['parentId'] == 0;
+        return !isset($this->attributes['parentId']);
+        //return $this->attributes['parentId'] == 0;
     }
 
     public function scopeRoot($query) {

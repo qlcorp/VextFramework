@@ -7,17 +7,12 @@ class TreeController extends CrudController {
 
     protected $root = 'children';
 
-    public function getIndex() {
-        echo "Hello world!";
-        $Model = $this->Model;
-    }
-
     protected function createRoot($parentKey) {
         $Model = $this->Model;
         return $Model::Create(array(
-            'leaf' => false,
+            'leaf'  => false,
             'index' => 0,
-            'text' => 'New Root',
+            'text'  => 'New Root',
             $this->model->parentKey => $parentKey
         ));
     }
@@ -25,12 +20,12 @@ class TreeController extends CrudController {
     public function getRead() {
         $Model = $this->Model;
 
-        $parentKey = $this->model->getParentKey();
+        $parentKey   = $this->model->getParentKey();
         $parentValue = $parentKey ? Input::get($parentKey) : null;
 
         if (isset($_GET['node'])) {  // Process request as tree
             $node = Input::get('node');
-            $id = Input::get($this->model->getTable() . '_id');
+            $id   = Input::get($this->model->getTable() . '_id');
             $node = $this->getNode($id, $parentKey, $parentValue);
         }
         else {
@@ -48,11 +43,22 @@ class TreeController extends CrudController {
             $query = $query->where($parentKey, $parentValue);
         }
 
-        $node = $query->whereNull('parentId')->get();
+        $node = $query->whereNull('parentId')->with('children')->first();
 
-        return $node;
+        return new Collection($this->flatten($node));
     }
 
+    protected function flatten($tree) {
+        $flat_tree = array($tree);
+
+        if ( !$tree->children->isEmpty() ) {
+            foreach ($tree->children as $child) {
+                $flat_tree = array_merge($flat_tree, $this->flatten($child));
+            }
+        }
+
+        return $flat_tree;
+    }
 
     protected function getNode($id, $parentKey = null, $parentValue = null) {
         $this->root = 'children';

@@ -54,14 +54,17 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
     }
 
     //Lookup
-    public function lookup($model, $param = null) {
-        return $this->blueprint->getCurrentColumn()->setLookup($model, $param);
+    public function lookup($model, $param = null, $name = null) {
+        return $this->blueprint->getCurrentColumn()->setLookup($model, $param, $name);
     }
 
-    public function setLookup($model, $param = null) {
+    public function setLookup($model, $param = null, $name = null) {
         $this->lookup = compact('model');
         if ( !is_null($param) ) {
             $this->lookup['param'] = $param;
+        }
+        if ( !is_null($name) ) {
+            $this->lookup['name'] = $name;
         }
         return $this;
     }
