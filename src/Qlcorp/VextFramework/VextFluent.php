@@ -42,7 +42,11 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
     }
 
     public function getType() {
-        return $this->attributes['type'];
+        if ( ($type = $this->attributes['type']) === 'enum' ) {
+            $type = 'string';
+        }
+
+        return $type;
     }
 
     public function getNullable() {
@@ -169,6 +173,7 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
         $this->setOption($field, 'gridConfig', $this->gridConfig);
         $this->setOption($field, 'dropdown', $this->dropdown);
         $this->setOption($field, 'lookup', $this->lookup);
+
         return $field;
     }
 

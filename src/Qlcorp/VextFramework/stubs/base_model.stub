@@ -14,9 +14,15 @@ class Base{{model}} extends CrudModel {
     protected $fillable = array(
         {{fillable}}
     );
+
+    protected $appends = array(
+        {{appends}}
+    );
+
     protected $rules = array(
         {{rules}}
     );
+
     protected $messages = array(
         {{messages}}
     );

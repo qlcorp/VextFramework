@@ -31,12 +31,15 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     protected $with = array();
     protected $appends = array();
 
-    public function appends($attributes) {
-        if ( !is_array($attributes) ) {
-            $attributes = func_get_args();
-        }
+    public function appends($name, $type) {
 
-        $this->appends = array_merge($this->appends, $attributes);
+        //$this->appends[] = $name;
+        //$this->fillable = array_merge($this->fillable, $attributes);
+        $attributes = compact('name', 'type');
+        $this->appends[] = $this->current_column = new VextFluent($attributes, $this);
+
+        return $this->current_column;
+
     }
 
     public function hasMany($related, $foreignKey = null, $localKey = null) {
@@ -160,7 +163,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     }
 
     public function laravelBaseModel() {
-        $fillable = '\'' . implode("',\r\n\t\t'", $this->fillable) . '\'';
+        $fillable = $this->prettyPrintArray($this->fillable);
         $rules = array();
         $messages = array();
         foreach ($this->columns as $column) {
@@ -197,10 +200,26 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
 
         $parentKey = $this->parentKey;
 
-        $stub = $this->populateStub($stub, compact('fillable', 'rules', 'messages', 'parentKey'));
+        $appends = $this->prettyPrintArray($this->getColNames($this->appends));
+
+        $stub = $this->populateStub($stub, compact('fillable', 'rules', 'messages', 'parentKey', 'appends'));
         $stub = $this->addRelationships($stub);
         return $stub;
 
+    }
+
+    protected function getColNames($cols) {
+        $names = array();
+
+        foreach ($cols as $col) {
+            $names[] = $col->name;
+        }
+
+        return $names;
+    }
+
+    private function prettyPrintArray($array) {
+        return '\'' . implode("',\r\n\t\t'", $array) . '\'';
     }
 
     protected function addRelationships($stub) {
@@ -276,6 +295,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         $stub = str_replace('{{messages}}', $data['messages'], $stub);
         $stub = str_replace('{{parentKey}}', $data['parentKey'], $stub);
         $stub = str_replace('{{userstamps}}', $this->userstamps, $stub);
+        $stub = str_replace('{{appends}}', $data['appends'], $stub);
         return $stub;
     }
 
@@ -290,6 +310,10 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
 
         foreach ($this->columns as $column) {
             $fields[] = $column->toArray();
+        }
+
+        foreach ($this->appends as $appended) {
+            $fields[] = $appended->toArray();
         }
 
         if ($this->tree) {
