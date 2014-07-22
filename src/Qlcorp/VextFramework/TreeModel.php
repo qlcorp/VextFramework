@@ -21,8 +21,6 @@ class TreeModel extends CrudModel {
         return $this->hasMany(get_class($this), 'parentId')
             ->orderBy('index')
             ->with('children');
-        /*return $this->directChildren()
-            ->with('children');*/
     }
 
     public function parent() {

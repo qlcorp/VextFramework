@@ -3,6 +3,7 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Contracts\ArrayableInterface;
 use Illuminate\Support\Contracts\JsonableInterface;
+use Illuminate\Support\Facades\Config;
 
 /**
  * Class VextBlueprint
@@ -73,7 +74,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
             ));
 
         $this->foreign($column)
-            ->references('id')->on('users');
+            ->references('id')->on(Config::get('auth.table', 'users'));
     }
 
     public function userstamps() {
