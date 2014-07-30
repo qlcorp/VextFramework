@@ -220,7 +220,11 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     }
 
     private function prettyPrintArray($array) {
-        return '\'' . implode("',\r\n\t\t'", $array) . '\'';
+        if ( empty($array) ) {
+            return '';
+        } else {
+            return '\'' . implode("',\r\n\t\t'", $array) . '\'';
+        }
     }
 
     protected function addRelationships($stub) {
