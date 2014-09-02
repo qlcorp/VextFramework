@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 
 class TreeController extends CrudController {
 
