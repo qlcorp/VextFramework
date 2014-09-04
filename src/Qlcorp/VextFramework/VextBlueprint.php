@@ -68,7 +68,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
 
     public function userstamp($column) {
         //$this->with[] = camel_case($column);
-        $this->integer($column)
+        $this->unsignedInteger($column)
             ->fieldConfig(array(
                 'fieldLabel' => ucfirst(str_replace('_', ' ', $column))
             ));
@@ -99,7 +99,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     public function tree() {
         $this->tree = true;
 
-        $this->integer('parentId')->nullable()->fillable();
+        $this->unsignedInteger('parentId')->nullable()->fillable();
         $this->integer('index')->fillable()->required();
 
         //$this->string('text', 200)->fillable()->required();
