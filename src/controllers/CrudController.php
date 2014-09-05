@@ -96,14 +96,18 @@ abstract class CrudController extends BaseController {
         //Get multiple records (pagination)
         $filter = Input::get('filter');
         $limit =  Input::get('limit');
-        $offset = Input::get('start', 0);
+        $offset = Input::get('start');
 
         if ( $filter ) $this->filterQuery($query, json_decode($filter));
 
         $count = $query->count();
 
-        $query->skip($offset);
-        if ( $limit ) $query->take($limit);
+        if ( $limit ) {
+            $query->take($limit);
+            if ( $offset ) {
+                $query->take($offset);
+            }
+        }
 
         return $this->success($query->get(), array('total' => $count));
     }
