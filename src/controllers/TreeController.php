@@ -18,6 +18,48 @@ class TreeController extends CrudController {
         ));
     }
 
+    public function postCopy() {
+        $Model = $this->Model;
+        $id = Input::get('id');
+
+        $node = $Model::with('children')->findOrFail($id);
+        $attributes = $node->attributesToArray();
+
+        if ( !$node->leaf ) {
+            $copy = $this->copyBranch($node, $node->parentId);
+            $copy->load('children');
+        } else {
+            $copy = new $Model($attributes);
+        }
+
+        $copy->index = $Model::where('parentId', $node->parentId)->count();
+        $copy->save();
+
+        return $this->success($copy);
+    }
+
+    /**
+     * Duplicates a branch
+     *
+     * @param Eloquent $branch root node of branch to copy
+     * @param int $parentId id of parent node to paste copy to
+     * @return Eloquent duplicated root node
+     */
+    protected function copyBranch($branch, $parentId) {
+        $Model = $this->Model;
+
+        $copy = new $Model($branch->attributesToArray());
+        $copy->parentId = $parentId;
+        $copy->save();
+        $parentId = $copy->id;
+
+        foreach ( $branch->children as $child ) {
+            $this->copyBranch($child, $parentId);
+        }
+
+        return $copy;
+    }
+
     public function getRead() {
         $Model = $this->Model;
 
