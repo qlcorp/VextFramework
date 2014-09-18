@@ -105,7 +105,7 @@ abstract class CrudController extends BaseController {
         if ( $limit ) {
             $query->take($limit);
             if ( $offset ) {
-                $query->take($offset);
+                $query->skip($offset);
             }
         }
 
