@@ -158,6 +158,7 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
         $callback();
         $this->rules = VextValidate::getRules();
         VextValidate::reset();
+        $this->fieldConfig($this->rules);
         return $this;
     }
 
