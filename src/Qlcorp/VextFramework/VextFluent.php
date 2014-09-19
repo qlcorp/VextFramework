@@ -4,7 +4,6 @@ use Illuminate\Support\Contracts\ArrayableInterface;
 use Illuminate\Support\Contracts\JsonableInterface;
 use Illuminate\Support\Fluent;
 use Closure;
-use Qlcorp\VextFramework\Facades\VextValidate;
 
 class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface {
 
@@ -155,10 +154,11 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
     }
 
     protected function setValidation(Closure $callback) {
-        $callback();
-        $this->rules = VextValidate::getRules();
-        VextValidate::reset();
+        $validate = new VextValidate;
+        $callback($validate);
+        $this->rules = $validate->getRules();
         $this->fieldConfig($this->rules);
+
         return $this;
     }
 
@@ -200,4 +200,4 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
     }
 
 
-} 
+}

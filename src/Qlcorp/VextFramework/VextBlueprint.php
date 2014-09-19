@@ -133,11 +133,22 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
      */
     protected function addColumn($type, $name, array $parameters = array()) {
         $attributes = array_merge(compact('type', 'name'), $parameters);
-        $this->columns[] = $this->current_column = new VextFluent($attributes, $this);
-        //$column = parent::addColumn($type, $name, $parameters);
-        //$this->current_column = new VextFluent($column->getAttributes(),$this);
+        $column = new VextFluent($attributes, $this);
 
+        $this->columns[] = $this->current_column = $column;
         $this->current_name = $name;
+
+        $column->validation(function($validate) use ($column) {
+            $type = $column->getType();
+
+            if ( $type === 'char' ) {
+                $validate->maxLength($column->length);
+                $validate->minLength($column->length);
+            } else if ( $type === 'string' ) {
+                $validate->maxLength($column->length);
+            }
+
+        });
 
         return $this->current_column;
     }
@@ -167,8 +178,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         $fillable = $this->prettyPrintArray($this->fillable);
         $rules = array();
         $messages = array();
-        foreach ($this->columns as $column) {
-            //$config = $column->getFieldConfig();
+        foreach ($this->columns as &$column) {
             $laravelRules = array();
             $extJsRules = $column->getRules();
             $name = $column->getName();
