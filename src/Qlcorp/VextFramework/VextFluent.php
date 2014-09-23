@@ -135,6 +135,14 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
         foreach($elements as $key => $value) {
             $this->dropdown[] = compact('key', 'value');
         }
+
+        if ( isset($this->fieldConfig['maxLength']) ) {
+            unset($this->fieldConfig['maxLength']);
+        }
+        if ( isset($this->fieldConfig['minLength']) ) {
+            unset($this->fieldConfig['minLength']);
+        }
+
         return $this;
     }
 
