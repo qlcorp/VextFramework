@@ -247,7 +247,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
             $type = $relationship['type'];
             $param_array = array($model, $relationship['foreignKey'], $relationship['localKey']);
             $params = "'" . implode("','", array_filter($param_array)) . "'";
-            $relation_stubs[] = "public function {$name}() {\n" .
+            $relation_stubs[] = "\tpublic function {$name}() {\n" .
             "\t\t" . 'return $this->'. $type . "($params);" .
             "\n\t}\n";
         }
@@ -263,7 +263,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
 
                 $model = studly_case($lookup['model']);
 
-                $relationship = "public function {$name}() {\n" .
+                $relationship = "\tpublic function {$name}() {\n" .
                 "\t\t" . 'return $this->belongsTo("'. $model .'", "'. $col->getName() .'");' .
                 "\n\t}\n";
 

@@ -27,6 +27,6 @@ class Base{{model}} extends TreeModel {
         {{messages}}
     );
 
-    {{relationships}}
+{{relationships}}
 
 }

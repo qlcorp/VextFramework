@@ -27,5 +27,6 @@ class Base{{model}} extends CrudModel {
         {{messages}}
     );
 
-    {{relationships}}
+{{relationships}}
+
 }
