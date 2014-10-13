@@ -86,9 +86,7 @@ class TreeController extends CrudController {
             $query = $query->where($parentKey, $parentValue);
         }
 
-        $node = $query->whereNull('parentId')->with('children')->first();
-
-        return new Collection($this->flatten($node));
+        return $node = $query->whereNull('parentId')->with('children')->get();
     }
 
     protected function flatten($tree) {
