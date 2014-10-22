@@ -261,6 +261,8 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
                     $name = camel_case($lookup['model']);
                 }
 
+                $name = strtolower($name);
+
                 $model = studly_case($lookup['model']);
 
                 $relationship = "\tpublic function {$name}() {\n" .
