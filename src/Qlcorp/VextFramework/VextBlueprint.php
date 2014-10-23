@@ -141,13 +141,14 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         $column->validation(function($validate) use ($column) {
             $type = $column->getType();
 
-            if ( $type === 'char' ) {
-                $validate->maxLength($column->length);
-                $validate->minLength($column->length);
-            } else if ( $type === 'string' ) {
-                $validate->maxLength($column->length);
+            if ( $length = $column->length ) {
+                if ( $type === 'char' ) {
+                    $validate->maxLength($length);
+                    $validate->minLength($length);
+                } else if ( $type === 'string' ) {
+                    $validate->maxLength($length);
+                }
             }
-
         });
 
         return $this->current_column;
