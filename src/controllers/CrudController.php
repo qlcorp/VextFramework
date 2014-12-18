@@ -65,6 +65,10 @@ abstract class CrudController extends BaseController {
         return \VextSchema::getExtJsModel($table);
     }
 
+    protected function baseQuery() {
+        return $this->model->newQuery();
+    }
+
     /**
      * Retrieve records
      *
@@ -76,11 +80,12 @@ abstract class CrudController extends BaseController {
     public function getRead() {
         $Model = $this->Model;
         $parentKey = $this->model->getParentKey();
-        $query = $this->model->newQuery();
+        $query = $this->baseQuery();
 
         if ( $parentKey && Input::has($parentKey) ) {
             $parentValue = Input::get($parentKey);
-            $query = $query->where($parentKey, $parentValue);
+            $table = $this->model->getTable();
+            $query = $query->where("$table.$parentKey", $parentValue);
         }
 
         //Get single record by primary key
