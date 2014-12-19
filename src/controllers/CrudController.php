@@ -81,20 +81,20 @@ abstract class CrudController extends BaseController {
         $Model = $this->Model;
         $parentKey = $this->model->getParentKey();
         $query = $this->baseQuery();
+        $table = $this->model->getTable();
+        $primary = $this->model->getKeyName();
 
         if ( $parentKey && Input::has($parentKey) ) {
             $parentValue = Input::get($parentKey);
-            $table = $this->model->getTable();
             $query = $query->where("$table.$parentKey", $parentValue);
         }
 
         //Get single record by primary key
         if ( ($id = $this->getKeyFromInput()) !== null ) {
-            $record = $query->find($id);
+            $record = $query->where("$table.$primary", $id)->first();
             if ( $record !== null ) {
                 return $this->success($record);
             } else {
-                //todo: what to return here?
                 return $this->failure($record, "$Model not found.");
             }
         }
