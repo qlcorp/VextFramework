@@ -12,6 +12,7 @@
 use Illuminate\Support\Facades\Input;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
 
 abstract class CrudController extends BaseController {
     /**
@@ -103,7 +104,9 @@ abstract class CrudController extends BaseController {
         $limit =  Input::get('limit');
         $offset = Input::get('start');
 
-        if ( $filter ) $this->filterQuery($query, json_decode($filter));
+        if ( $filter ) {
+            $this->filterQuery($query, json_decode($filter));
+        }
 
         $count = $query->count();
 
@@ -114,7 +117,8 @@ abstract class CrudController extends BaseController {
             }
         }
 
-        return $this->success($query->get(), array('total' => $count));
+        $records = $query->get();
+        return $this->success($records, array('total' => $count));
     }
 
     /**
@@ -126,15 +130,24 @@ abstract class CrudController extends BaseController {
      * @throws \InvalidArgumentException
      */
     protected function filterQuery(&$query, $filters) {
+        $table = $this->model->getTable();
         foreach ($filters as $filter) {
-            $property = $filter->property;
-            $value = '%' . $filter->value . '%';
-
-            if ( empty($property) || empty($value) ) {
+            if ( empty($filter->property) || empty($filter->value) ) {
                 throw new \InvalidArgumentException();
             }
+            $property = $filter->property;
+            $value = $filter->value;
+            $type = DB::connection()->getDoctrineColumn($table, $property)->getType()->getName();
 
-            $query->where($property, 'like', $value);
+            $property = $table . '.' . $filter->property;
+
+            if (str_contains($type, 'time')) {
+                $start = date('Y-m-d H:i:s', strtotime($value->start));
+                $end = date('Y-m-d H:i:s', strtotime($value->end));
+                $query->whereBetween($property, array($start, $end));
+            } else {
+                $query->where($property, 'ilike', '%' . $value . '%');
+            }
         }
 
         return $query;
