@@ -105,7 +105,12 @@ abstract class CrudController extends BaseController {
         $offset = Input::get('start');
 
         if ( $filter ) {
-            $this->filterQuery($query, json_decode($filter));
+            $filters = json_decode($filter);
+            $filter_dict = array();
+            foreach($filters as $filter) {
+                $filter_dict[$filter->property] = $filter->value;
+            }
+            $this->filterQuery($query, $filter_dict);
         }
 
         $count = $query->count();
@@ -131,20 +136,17 @@ abstract class CrudController extends BaseController {
      */
     protected function filterQuery(&$query, $filters) {
         $table = $this->model->getTable();
-        foreach ($filters as $filter) {
-            if ( empty($filter->property) || empty($filter->value) ) {
-                throw new \InvalidArgumentException();
-            }
-            $property = $filter->property;
-            $value = $filter->value;
+        foreach ($filters as $property => $value) {
             $type = DB::connection()->getDoctrineColumn($table, $property)->getType()->getName();
 
-            $property = $table . '.' . $filter->property;
+            $property = $table . '.' . $property;
 
             if (str_contains($type, 'time')) {
                 $start = date('Y-m-d H:i:s', strtotime($value->start));
                 $end = date('Y-m-d H:i:s', strtotime($value->end));
                 $query->whereBetween($property, array($start, $end));
+            } else if ($type === 'integer') {
+                $query->where($property, $value);
             } else {
                 $query->where($property, 'ilike', '%' . $value . '%');
             }
