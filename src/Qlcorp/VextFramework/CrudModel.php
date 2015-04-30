@@ -89,6 +89,15 @@ abstract class CrudModel extends \Eloquent {
             });
         }
 
+        static::created(function($model) use ($instance) {
+           foreach ($instance->getWith() as $relationship) {
+               $model->load($relationship);
+           }
+        });
+    }
+
+    public function getWith() {
+        return $this->with;
     }
 
 }

@@ -177,6 +177,7 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
     public function toArray() {
         $this->setOption($field, 'name', $this->getName());
         $this->setOption($field, 'type', $this->getType());
+        $this->setOption($field, 'dateFormat', $this->dateFormat);
         $this->setOption($field, 'useNull', $this->getNullable());
         $this->setOption($field, 'fieldConfig', $this->fieldConfig);
         $this->setOption($field, 'gridConfig', $this->gridConfig);

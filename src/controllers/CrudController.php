@@ -50,9 +50,9 @@ abstract class CrudController extends BaseController {
             return $me->failure(null, $e->getMessage());
         });
 
-        App::error(function(\Exception $e) use ($me) {
+        /*App::error(function(\Exception $e) use ($me) {
             return $me->failure(null, $e->getMessage());
-        });
+        });*/
     }
 
     /**

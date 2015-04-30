@@ -32,15 +32,49 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     protected $with = array();
     protected $appends = array();
 
-    public function appends($name, $type) {
+    /**
+     * Add a new column to the blueprint.
+     *
+     * @param  string  $type
+     * @param  string  $name
+     * @param  array   $parameters
+     * @return \Illuminate\Support\Fluent
+     */
+    protected function addColumn($type, $name, array $parameters = array()) {
+        $attributes = array_merge(compact('type', 'name'), $parameters);
+        $column = new VextFluent($attributes, $this);
 
+        $this->columns[] = $this->current_column = $column;
+        $this->current_name = $name;
+
+        $column->validation(function($validate) use ($column) {
+            $type = $column->getType();
+
+            if ( $length = $column->length ) {
+                if ( $type === 'char' ) {
+                    $validate->maxLength($length);
+                    $validate->minLength($length);
+                } else if ( $type === 'string' ) {
+                    $validate->maxLength($length);
+                }
+            }
+        });
+
+        return $this->current_column;
+    }
+
+    public function date($name)
+    {
+        return $this->addColumn('date', $name, array('dateFormat' => 'Y-m-d'));
+    }
+
+    public function appends($name, $type) {
         //$this->appends[] = $name;
         //$this->fillable = array_merge($this->fillable, $attributes);
         $attributes = compact('name', 'type');
         $this->appends[] = $this->current_column = new VextFluent($attributes, $this);
 
         return $this->current_column;
-
     }
 
     public function hasMany($related, $foreignKey = null, $localKey = null) {
@@ -121,37 +155,6 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     public function parent($parentKey) {
         $this->parentKey = $parentKey;
         return $this;
-    }
-
-    /**
-     * Add a new column to the blueprint.
-     *
-     * @param  string  $type
-     * @param  string  $name
-     * @param  array   $parameters
-     * @return \Illuminate\Support\Fluent
-     */
-    protected function addColumn($type, $name, array $parameters = array()) {
-        $attributes = array_merge(compact('type', 'name'), $parameters);
-        $column = new VextFluent($attributes, $this);
-
-        $this->columns[] = $this->current_column = $column;
-        $this->current_name = $name;
-
-        $column->validation(function($validate) use ($column) {
-            $type = $column->getType();
-
-            if ( $length = $column->length ) {
-                if ( $type === 'char' ) {
-                    $validate->maxLength($length);
-                    $validate->minLength($length);
-                } else if ( $type === 'string' ) {
-                    $validate->maxLength($length);
-                }
-            }
-        });
-
-        return $this->current_column;
     }
 
     public function model($model) {
