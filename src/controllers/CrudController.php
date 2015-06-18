@@ -91,7 +91,7 @@ abstract class CrudController extends BaseController {
         }
 
         //Get single record by primary key
-        if ( ($id = $this->getKeyFromInput()) !== null ) {
+        if ( $id = $this->getKeyFromInput() ) {
             $record = $query->where("$table.$primary", $id)->first();
             if ( $record !== null ) {
                 return $this->success($record);
