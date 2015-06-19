@@ -199,7 +199,7 @@ abstract class CrudController extends BaseController {
     /**
      * Delete record
      */
-    public function postDelete() {
+    public function postDestroy() {
         $Model = $this->Model;
 
         $id = $this->getKeyFromInput();
