@@ -66,7 +66,7 @@ abstract class CrudModel extends \Eloquent {
 
         //Halt saving if validation fails
         static::saving(function($model) {
-            if ( !$model->validate() ) return false;
+            if ( !$model->validate() ) throw new \Exception('Model validation failed');
         });
 
         if ($instance->userstamps) {
