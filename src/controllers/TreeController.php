@@ -8,6 +8,10 @@ class TreeController extends CrudController {
 
     protected $root = 'children';
 
+    protected function baseQuery() {
+        return $this->model->newQuery();
+    }
+
     protected function createRoot($parentKey) {
         $Model = $this->Model;
         return $Model::Create(array(
@@ -79,8 +83,8 @@ class TreeController extends CrudController {
     }
 
     protected function getRecords($parentKey = null, $parentValue = null) {
-        $this->root = $this->model->getTable();
-        $query = $this->model->newQuery();
+        $this->root = lcfirst($this->Model);
+        $query = $this->baseQuery();
 
         if ( $parentKey ) {
             $query = $query->where($parentKey, $parentValue);
