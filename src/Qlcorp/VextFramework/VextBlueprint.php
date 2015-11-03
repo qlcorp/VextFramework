@@ -63,10 +63,10 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         return $this->current_column;
     }
 
-    /*public function date($name)
+    public function date($name)
     {
         return $this->addColumn('date', $name, array('dateFormat' => 'Y-m-d'));
-    }*/
+    }
 
     public function appends($name, $type) {
         //$this->appends[] = $name;
