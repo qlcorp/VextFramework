@@ -22,6 +22,24 @@ class TreeController extends CrudController {
         ));
     }
 
+    public function postDestroy() {
+        $Model = $this->Model;
+        $id = Input::get('id');
+        $node = $Model::findOrFail($id);
+
+        if (!$node->parentId) {
+            return $this->failure(null, 'Permission denied.');
+        }
+
+        $Model::where('parentId', $node->parentId)
+            ->where('index', '>', $node->index)
+            ->decrement('index');
+
+        $node->delete();
+
+        return $this->success();
+    }
+
     public function postCopy() {
         $Model = $this->Model;
         $id = Input::get('id');
@@ -136,7 +154,6 @@ class TreeController extends CrudController {
         $Model = $this->Model;
 
         DB::transaction(function() use ($Model) {
-
             $id = Input::get('id');
             $oldParentId = Input::get('oldParentId');
             $newParentId = Input::get('newParentId');
@@ -144,8 +161,6 @@ class TreeController extends CrudController {
 
             $node = $Model::findOrFail($id);
             $oldIndex = $node->index;
-
-            //$node->delete();
 
             $Model::where('parentId', $oldParentId)
                 ->where('index', '>', $oldIndex)
@@ -157,9 +172,9 @@ class TreeController extends CrudController {
 
             $node->index = $newIndex;
             $node->parentId = $newParentId;
+
             $node->save();
         });
-
 
     }
 

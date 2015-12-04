@@ -8,6 +8,8 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
+class ModelValidationException extends \Exception {}
+
 abstract class CrudModel extends \Eloquent {
     protected $parentKey = null;
     //validation parameters to overwrite
@@ -49,7 +51,7 @@ abstract class CrudModel extends \Eloquent {
         if ( isset($this->errors) ) {
             return implode($this->errors->all('<li>:message</li>'));
         } else {
-            return "Request failed.";
+            return "No validation errors.";
         }
     }
 
@@ -66,7 +68,9 @@ abstract class CrudModel extends \Eloquent {
 
         //Halt saving if validation fails
         static::saving(function($model) {
-            if ( !$model->validate() ) throw new \Exception('Model validation failed');
+            if ( !$model->validate() ) {
+                throw new ModelValidationException("Model validation failed\n" . $model->getErrors());
+            }
         });
 
         if ($instance->userstamps) {
