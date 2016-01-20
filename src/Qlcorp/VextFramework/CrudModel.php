@@ -17,6 +17,7 @@ abstract class CrudModel extends \Eloquent {
     protected $rules = array();
     protected $messages = array();
     public $errors;
+    public $queryParam = 'text';
 
     public function getParentKey() {
         return $this->parentKey;
@@ -49,7 +50,7 @@ abstract class CrudModel extends \Eloquent {
      */
     public function getErrors() {
         if ( isset($this->errors) ) {
-            return implode($this->errors->all('<li>:message</li>'));
+            return implode('; ', $this->errors->all());
         } else {
             return "No validation errors.";
         }
@@ -69,7 +70,7 @@ abstract class CrudModel extends \Eloquent {
         //Halt saving if validation fails
         static::saving(function($model) {
             if ( !$model->validate() ) {
-                throw new ModelValidationException("Model validation failed\n" . $model->getErrors());
+                throw new ModelValidationException("Validation failed: " . $model->getErrors());
             }
         });
 

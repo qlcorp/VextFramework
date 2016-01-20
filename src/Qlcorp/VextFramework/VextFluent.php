@@ -18,10 +18,15 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
     protected $fieldConfig = array();
     protected $tree = false;
     protected $lookup = null;
+    protected $eagerLoad = true;
 
     public function __construct($attributes = array(), VextBlueprint $blueprint) {
         parent::__construct($attributes);
         $this->blueprint = $blueprint;
+    }
+
+    public function getEagerLoad() {
+        return $this->eagerLoad;
     }
 
     public function getLookup() {
@@ -69,6 +74,16 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
         if ( !is_null($name) ) {
             $this->lookup['name'] = $name;
         }
+        return $this;
+    }
+
+    public function eagerLoad($eager = true) {
+        return $this->blueprint->getCurrentColumn()->setEagerLoad($eager);
+    }
+
+    public function setEagerLoad($eager) {
+        $this->eagerLoad = $eager;
+
         return $this;
     }
 

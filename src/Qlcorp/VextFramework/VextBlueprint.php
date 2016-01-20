@@ -275,7 +275,9 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
 
                 $relation_stubs[] = $relationship;
 
-                $this->with[] = $name;
+                if ($col->getEagerLoad()) {
+                    $this->with[] = $name;
+                }
             }
         }
 

@@ -50,9 +50,15 @@ abstract class CrudController extends BaseController {
             return $me->failure(null, $e->getMessage());
         });
 
-        /*App::error(function(\Exception $e) use ($me) {
+        App::error(function(ModelValidationException $e) use ($me) {
             return $me->failure(null, $e->getMessage());
-        });*/
+        });
+
+        /*
+        App::error(function(\Exception $e) use ($me) {
+            return $me->failure(null, $e->getMessage());
+        });
+        */
     }
 
     /**
@@ -103,6 +109,11 @@ abstract class CrudController extends BaseController {
         $filter = Input::get('filter');
         $limit =  Input::get('limit');
         $offset = Input::get('start');
+        $lookup_query = Input::get('query');
+
+        if ($lookup_query) {
+            $this->filterQuery($query, array($this->model->queryParam => $lookup_query));
+        }
 
         if ( $filter ) {
             $filters = json_decode($filter);
@@ -227,7 +238,11 @@ abstract class CrudController extends BaseController {
 
     public function success($records = null, $options = array()) {
         if (!is_null($records)) {
-            $options[$this->root] = $records->toArray();
+            if (!is_array($records)) {
+                $records = $records->toArray();
+            }
+
+            $options[$this->root] = $records;
         }
         return parent::success($options);
     }
