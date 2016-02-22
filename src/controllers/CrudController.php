@@ -133,6 +133,14 @@ abstract class CrudController extends BaseController {
             }
         }
 
+        if (Input::has('sort')) {
+            $sorters = json_decode(Input::get('sort'));
+
+            foreach($sorters as $sorter) {
+                $query->orderBy($sorter->property, $sorter->direction);
+            }
+        }
+
         $records = $query->get();
         return $this->success($records, array('total' => $count));
     }
