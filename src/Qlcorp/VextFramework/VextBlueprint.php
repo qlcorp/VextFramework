@@ -31,6 +31,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     protected $relationships = array();
     protected $with = array();
     protected $appends = array();
+    protected $showTimestampsInGrid = false;
 
     /**
      * Add a new column to the blueprint.
@@ -89,14 +90,26 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     }
 
     public function timestamp($column) {
-        return parent::timestamp($column)
-            ->fieldConfig(array(
-                'fieldLabel' => ucfirst(str_replace('_', ' ', $column))
+        $timestamp = parent::timestamp($column);
+        $label = ucfirst(str_replace('_', ' ', $column));
+        $timestamp = $timestamp->fieldConfig(array(
+                'fieldLabel' => $label
             ));
+
+        if ($this->showTimestampsInGrid) {
+            $timestamp->gridConfig(array(
+                'text' => $label,
+                'width' => 150
+            ));
+        }
+
+        return $timestamp;
     }
 
-    public function timestamps() {
+    public function timestamps($showInGrid = false) {
         $this->timestamps = 'true';
+        $this->showTimestampsInGrid = $showInGrid;
+
         return parent::timestamps();
     }
 
