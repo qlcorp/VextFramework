@@ -1,4 +1,5 @@
 <?php namespace Qlcorp\VextFramework;
+
 /**
  * Class CrudModel
  *
@@ -8,9 +9,12 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
-class ModelValidationException extends \Exception {}
+class ModelValidationException extends \Exception
+{
+}
 
-abstract class CrudModel extends \Eloquent {
+abstract class CrudModel extends \Eloquent
+{
     protected $parentKey = null;
     //validation parameters to overwrite
     //validator will pass automatically if $rules is not defined in child
@@ -19,15 +23,18 @@ abstract class CrudModel extends \Eloquent {
     public $errors;
     public $queryParam = 'text';
 
-    public function getParentKey() {
+    public function getParentKey()
+    {
         return $this->parentKey;
     }
 
-    public function updatedBy() {
+    public function updatedBy()
+    {
         return $this->belongsTo('User', 'updated_by');
     }
 
-    public function createdBy() {
+    public function createdBy()
+    {
         return $this->belongsTo('User', 'created_by');
     }
 
@@ -35,11 +42,13 @@ abstract class CrudModel extends \Eloquent {
      * Validates generation input
      * @return bool
      */
-    public function validate() {
+    public function validate()
+    {
         $validator = Validator::make($this->toArray(), $this->rules,
             $this->messages);
-        if ( $validator->fails() ) {
+        if ($validator->fails()) {
             $this->errors = $validator->messages();
+
             return false;
         } else return true;
     }
@@ -48,8 +57,9 @@ abstract class CrudModel extends \Eloquent {
      * Get validation errors
      * @return string
      */
-    public function getErrors() {
-        if ( isset($this->errors) ) {
+    public function getErrors()
+    {
+        if (isset($this->errors)) {
             return implode('; ', $this->errors->all());
         } else {
             return "No validation errors.";
@@ -63,19 +73,20 @@ abstract class CrudModel extends \Eloquent {
      * individually within the boot() function
      *
      */
-    public static function boot() {
+    public static function boot()
+    {
         parent::boot();
         $instance = new static;
 
         //Halt saving if validation fails
-        static::saving(function($model) {
-            if ( !$model->validate() ) {
+        static::saving(function ($model) {
+            if (!$model->validate()) {
                 throw new ModelValidationException("Validation failed: " . $model->getErrors());
             }
         });
 
         if ($instance->userstamps) {
-            static::creating(function($model) {
+            static::creating(function ($model) {
                 if (!Auth::guest()) {
                     $model->created_by = Auth::user()->id;
                     $model->updated_by = Auth::user()->id;
@@ -85,7 +96,7 @@ abstract class CrudModel extends \Eloquent {
                 }
             });
 
-            static::updating(function($model) {
+            static::updating(function ($model) {
                 if (!Auth::guest()) {
                     $model->updated_by = Auth::user()->id;
                 } else {
@@ -94,14 +105,15 @@ abstract class CrudModel extends \Eloquent {
             });
         }
 
-        static::created(function($model) use ($instance) {
-           foreach ($instance->getWith() as $relationship) {
-               $model->load($relationship);
-           }
+        static::created(function ($model) use ($instance) {
+            foreach ($instance->getWith() as $relationship) {
+                $model->load($relationship);
+            }
         });
     }
 
-    public function getWith() {
+    public function getWith()
+    {
         return $this->with;
     }
 

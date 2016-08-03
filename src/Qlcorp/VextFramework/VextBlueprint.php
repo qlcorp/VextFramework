@@ -16,8 +16,11 @@ use Illuminate\Support\Facades\Config;
  * range
  * grid
  *
+ * @method VextFluent[] getColumns()
+ *
  */
-class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInterface {
+class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInterface
+{
 
     protected $current_column;
     protected $current_name;
@@ -36,26 +39,24 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     /**
      * Add a new column to the blueprint.
      *
-     * @param  string  $type
-     * @param  string  $name
-     * @param  array   $parameters
+     * @param  string $type
+     * @param  string $name
+     * @param  array  $parameters
      * @return \Illuminate\Support\Fluent
      */
-    protected function addColumn($type, $name, array $parameters = array()) {
+    protected function addColumn($type, $name, array $parameters = array())
+    {
         $attributes = array_merge(compact('type', 'name'), $parameters);
         $column = new VextFluent($attributes, $this);
 
         $this->columns[] = $this->current_column = $column;
         $this->current_name = $name;
 
-        $column->validation(function($validate) use ($column) {
+        $column->validation(function (VextValidate $validate) use ($column) {
             $type = $column->getType();
 
-            if ( $length = $column->length ) {
-                if ( $type === 'char' ) {
-                    $validate->maxLength($length);
-                    $validate->minLength($length);
-                } else if ( $type === 'string' ) {
+            if ($length = $column->length) {
+                if ($type === 'string') {
                     $validate->maxLength($length);
                 }
             }
@@ -69,7 +70,8 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         return $this->addColumn('date', $name, array('dateFormat' => 'Y-m-d'));
     }
 
-    public function appends($name, $type) {
+    public function appends($name, $type)
+    {
         //$this->appends[] = $name;
         //$this->fillable = array_merge($this->fillable, $attributes);
         $attributes = compact('name', 'type');
@@ -78,53 +80,61 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         return $this->current_column;
     }
 
-    public function hasMany($related, $foreignKey = null, $localKey = null) {
+    public function hasMany($related, $foreignKey = null, $localKey = null)
+    {
         $type = 'hasMany';
         $this->relationships[] = compact('type', 'related', 'foreignKey', 'localKey');
         $this->with[] = camel_case($related);
     }
 
-    public function addFillable($col) {
+    public function addFillable($col)
+    {
         $this->fillable[] = $col;
+
         return $this;
     }
 
-    public function timestamp($column) {
+    public function timestamp($column)
+    {
         $timestamp = parent::timestamp($column);
         $label = ucfirst(str_replace('_', ' ', $column));
+        $timestamp->dateFormat = 'Y-m-d';
         $timestamp = $timestamp->fieldConfig(array(
-                'fieldLabel' => $label
-            ));
+            'fieldLabel' => $label,
+        ));
 
         if ($this->showTimestampsInGrid) {
             $timestamp->gridConfig(array(
                 'text' => $label,
-                'width' => 150
+                'width' => 150,
             ));
         }
 
         return $timestamp;
     }
 
-    public function timestamps($showInGrid = false) {
+    public function timestamps($showInGrid = false)
+    {
         $this->timestamps = 'true';
         $this->showTimestampsInGrid = $showInGrid;
 
-        return parent::timestamps();
+        parent::timestamps();
     }
 
-    public function userstamp($column) {
+    public function userstamp($column)
+    {
         //$this->with[] = camel_case($column);
         $this->unsignedInteger($column)
             ->fieldConfig(array(
-                'fieldLabel' => ucfirst(str_replace('_', ' ', $column))
+                'fieldLabel' => ucfirst(str_replace('_', ' ', $column)),
             ));
 
         $this->foreign($column)
             ->references('id')->on(Config::get('auth.table', 'users'));
     }
 
-    public function userstamps() {
+    public function userstamps()
+    {
         $this->userstamps = 'true';
 
         $this->userstamp('created_by');
@@ -133,17 +143,21 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         return $this;
     }
 
-    public function pretend() {
+    public function pretend()
+    {
         $this->pretend = true;
+
         return $this->pretend;
     }
 
-    public function isPretend() {
+    public function isPretend()
+    {
         return $this->pretend;
     }
 
     //todo: make this happen after blueprint is done so primarykey can be dynamic
-    public function tree() {
+    public function tree()
+    {
         $this->tree = true;
 
         $this->unsignedInteger('parentId')->nullable()->fillable();
@@ -165,33 +179,46 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     }
 
     //todo: make this a function of VextFluent for foreignKey purposes
-    public function parent($parentKey) {
+    public function parent($parentKey)
+    {
         $this->parentKey = $parentKey;
+
         return $this;
     }
 
-    public function model($model) {
+    public function model($model)
+    {
         $this->model_name = $model;
     }
 
-    public function getModel() {
+    public function getModel()
+    {
         return $this->model_name;
     }
 
-    public function getCurrentColumn() {
+    /**
+     * @return VextFluent
+     */
+    public function getCurrentColumn()
+    {
         return $this->current_column;
     }
-    public function getCurrentName() {
+
+    public function getCurrentName()
+    {
         return $this->current_name;
     }
 
-    public function laravelModel() {
+    public function laravelModel()
+    {
         $stub = $this->getStub('model.stub');
-        $stub = str_replace('{{model}}', $this->model_name , $stub);
+        $stub = str_replace('{{model}}', $this->model_name, $stub);
+
         return $stub;
     }
 
-    public function laravelBaseModel() {
+    public function laravelBaseModel()
+    {
         $fillable = $this->prettyPrintArray($this->fillable);
         $rules = array();
         $messages = array();
@@ -200,7 +227,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
             $extJsRules = $column->getRules();
             $name = $column->getName();
 
-            if ( ($required = $column->getRequired()) !== null )  {
+            if (($required = $column->getRequired()) !== null) {
                 $laravelRules[] = 'required';
             }
 
@@ -208,11 +235,11 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
             $this->addRule($laravelRules, $extJsRules, 'max', 'maxLength');
             $this->addRule($laravelRules, $extJsRules, 'min', 'minValue');
             $this->addRule($laravelRules, $extJsRules, 'max', 'maxValue');
-            if ( isset($extJsRules['minText']) ) {
+            if (isset($extJsRules['minText'])) {
                 $messages[] = "'$name.min' => '" . $extJsRules['minText'] . '\'';
             }
 
-            if ( !empty($laravelRules) ) {
+            if (!empty($laravelRules)) {
                 $laravelRules = implode($laravelRules, '|');
                 $rules[] = "'$name' => '$laravelRules'";
             }
@@ -232,11 +259,13 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
 
         $stub = $this->populateStub($stub, compact('fillable', 'rules', 'messages', 'parentKey', 'appends'));
         $stub = $this->addRelationships($stub);
+
         return $stub;
 
     }
 
-    protected function getColNames($cols) {
+    protected function getColNames($cols)
+    {
         $names = array();
 
         foreach ($cols as $col) {
@@ -246,15 +275,17 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         return $names;
     }
 
-    private function prettyPrintArray($array) {
-        if ( empty($array) ) {
+    private function prettyPrintArray($array)
+    {
+        if (empty($array)) {
             return '';
         } else {
             return '\'' . implode("',\r\n\t\t'", $array) . '\'';
         }
     }
 
-    protected function addRelationships($stub) {
+    protected function addRelationships($stub)
+    {
         $relationships = $this->relationships;
         $relation_stubs = array();
 
@@ -265,14 +296,14 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
             $param_array = array($model, $relationship['foreignKey'], $relationship['localKey']);
             $params = "'" . implode("','", array_filter($param_array)) . "'";
             $relation_stubs[] = "\tpublic function {$name}() {\n" .
-            "\t\t" . 'return $this->'. $type . "($params);" .
-            "\n\t}\n";
+                "\t\t" . 'return $this->' . $type . "($params);" .
+                "\n\t}\n";
         }
 
         $columns = $this->getColumns();
-        foreach($columns as $col) {
-            if ( !is_null($lookup = $col->getLookup()) ) {
-                if ( isset($lookup['name']) ) {
+        foreach ($columns as $col) {
+            if (!is_null($lookup = $col->getLookup())) {
+                if (isset($lookup['name'])) {
                     $name = camel_case($lookup['name']);
                 } else {
                     $name = camel_case($lookup['model']);
@@ -283,8 +314,8 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
                 $model = studly_case($lookup['model']);
 
                 $relationship = "\tpublic function {$name}() {\n" .
-                "\t\t" . 'return $this->belongsTo("'. $model .'", "'. $col->getName() .'");' .
-                "\n\t}\n";
+                    "\t\t" . 'return $this->belongsTo("' . $model . '", "' . $col->getName() . '");' .
+                    "\n\t}\n";
 
                 $relation_stubs[] = $relationship;
 
@@ -295,52 +326,79 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         }
 
         $relationships = implode("\n\n", $relation_stubs);
-        if ( !empty($this->with) ) {
+        if (!empty($this->with)) {
             $this->with = '\'' . implode('\', \'', $this->with) . '\'';
         } else {
             $this->with = '';
         }
-        $stub = str_replace('{{relationships}}', $relationships, $stub);
-        $stub = str_replace('{{with}}', $this->with, $stub);
+
+        $stub = $this->stubFill('relationships', $relationships, $stub);
+        $stub = $this->stubFill('with', $this->with, $stub);
 
         return $stub;
     }
 
-    protected function addRule(&$laravelRules, $extJsRules, $laravelName, $extJsName) {
-        if ( isset($extJsRules[$extJsName]) )  {
+    protected function addRule(&$laravelRules, $extJsRules, $laravelName, $extJsName)
+    {
+        if (isset($extJsRules[$extJsName])) {
             $laravelRules[] = $laravelName . ':' . $extJsRules[$extJsName];
         }
 
         return $laravelRules;
     }
 
-    protected function getStubPath() {
+    protected function getStubPath()
+    {
         return __DIR__ . '/stubs';
     }
 
-    protected function getStub($name) {
+    protected function getStub($name)
+    {
         return file_get_contents($this->getStubPath() . "/{$name}");
     }
 
-    protected function populateStub($stub, $data = array()) {
-        $stub = str_replace('{{model}}', $this->model_name, $stub);
-        $stub = str_replace('{{table}}', $this->table, $stub);
-        $stub = str_replace('{{timestamps}}', $this->timestamps, $stub);
-        $stub = str_replace('{{fillable}}', $data['fillable'], $stub);
-        $stub = str_replace('{{rules}}', $data['rules'], $stub);
-        $stub = str_replace('{{messages}}', $data['messages'], $stub);
-        $stub = str_replace('{{parentKey}}', $data['parentKey'], $stub);
-        $stub = str_replace('{{userstamps}}', $this->userstamps, $stub);
-        $stub = str_replace('{{appends}}', $data['appends'], $stub);
+    protected function populateStub($stub, $data = array())
+    {
+        $stub = $this->stubFill('model', $this->model_name, $stub);
+        $stub = $this->stubFill('table', $this->table, $stub);
+        $stub = $this->stubFill('timestamps', $this->timestamps, $stub);
+        $stub = $this->stubFill('fillable', $data['fillable'], $stub);
+        $stub = $this->stubFill('rules', $data['rules'], $stub);
+        $stub = $this->stubFill('messages', $data['messages'], $stub);
+        $stub = $this->stubFill('parentKey', $data['parentKey'], $stub);
+        $stub = $this->stubFill('userstamps', $this->userstamps, $stub);
+        $stub = $this->stubFill('appends', $data['appends'], $stub);
+        $stub = $this->stubFill('properties', $this->getProperties(), $stub);
+
         return $stub;
     }
 
+    protected function getProperties()
+    {
+        $properties = array();
+        $cols = $this->getColumns();
 
-    public function toJson($options = 0) {
+        foreach ($cols as $col) {
+            $name  = $col->getName();
+            $type = $col->getPhpType();
+            $properties[] = "@property $type $$name";
+        }
+
+        return ' * ' . implode("\r\n * ", $properties);
+    }
+
+    protected function stubFill($param, $data, $stub)
+    {
+        return str_replace('{{$' . $param . '}}', $data, $stub);
+    }
+
+    public function toJson($options = 0)
+    {
         return json_encode($this->toArray());
     }
 
-    public function toArray() {
+    public function toArray()
+    {
         $fields = array();
         $model = array();
 
@@ -355,13 +413,13 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         if ($this->tree) {
             $fields[] = array(
                 'name' => 'root',
-                'type' => 'boolean'
+                'type' => 'boolean',
             );
         }
 
         $model = compact('fields');
         $relationships = $this->relationships;
-        foreach($relationships as $relationship) {
+        foreach ($relationships as $relationship) {
             $model[$relationship['type']][] = $relationship['related'];
         }
 

@@ -8,49 +8,57 @@
 
 namespace Qlcorp\VextFramework;
 
-class TreeModel extends CrudModel {
+class TreeModel extends CrudModel
+{
     protected $appends = array('root');
 
     //Relationships
-    public function directChildren() {
+    public function directChildren()
+    {
         return $this->hasMany(get_class($this), 'parentId')
             ->orderBy('index');
     }
 
-    public function children() {
+    public function children()
+    {
         return $this->hasMany(get_class($this), 'parentId')
             ->orderBy('index')
             ->with('children');
     }
 
-    public function parent() {
+    public function parent()
+    {
         return $this->belongsTo(get_class($this), 'parentId');
     }
 
-    public function getRootAttribute() {
+    public function getRootAttribute()
+    {
         //todo: switch statements when getParentIdAttribute is removed
         return !isset($this->attributes['parentId']);
         //return $this->attributes['parentId'] == 0;
     }
 
-    public function scopeRoot($query) {
+    public function scopeRoot($query)
+    {
         return $query->whereNull('parentId');
     }
 
     /**
      * todo: remove this in favor of returning null
      */
-    public function getParentIdAttribute() {
+    public function getParentIdAttribute()
+    {
         $parentId = $this->attributes['parentId'];
-        if ( is_null($parentId) ) {
+        if (is_null($parentId)) {
             return 0;
         } else {
             return $this->attributes['parentId'];
         }
     }
 
-    public function setParentIdAttribute($value) {
-        if ( $value === 0 ) {
+    public function setParentIdAttribute($value)
+    {
+        if ($value === 0) {
             $this->attributes['parentId'] = null;
         } else {
             $this->attributes['parentId'] = $value;
@@ -59,8 +67,8 @@ class TreeModel extends CrudModel {
 
     public function toArray()
     {
-        if ( isset($this->relations['directChildren']) ) {
-            if ( !isset($this->relations['children']) ) {
+        if (isset($this->relations['directChildren'])) {
+            if (!isset($this->relations['children'])) {
                 $this->relations['children'] = $this->relations['directChildren'];
                 unset($this->relations['directChildren']);
             }
