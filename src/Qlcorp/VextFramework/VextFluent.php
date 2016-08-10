@@ -13,9 +13,9 @@ use Closure;
  *
  * @author   Tony
  * @package  Qlcorp\VextFramework
- *
  * @property string $dateFormat
  * @property string $dateReadFormat
+ * @method VextFluent nullable()
  */
 class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
 {
@@ -86,6 +86,8 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
         switch ($type) {
             case 'date':
                 return in_array($name, $carbon) ? 'Carbon' : 'timestamp';
+            case 'test':
+                return 'string';
             default:
                 return $type;
         }

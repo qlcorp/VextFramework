@@ -7,17 +7,6 @@ use Illuminate\Support\Facades\Config;
 
 /**
  * Class VextBlueprint
- *
- * Available Validation Rules:
- * required
- * date
- * min
- * max
- * range
- * grid
- *
- * @method VextFluent[] getColumns()
- *
  */
 class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInterface
 {
@@ -46,6 +35,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
      */
     protected function addColumn($type, $name, array $parameters = array())
     {
+        $this->getColumns();
         $attributes = array_merge(compact('type', 'name'), $parameters);
         $column = new VextFluent($attributes, $this);
 
@@ -212,7 +202,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     public function laravelModel()
     {
         $stub = $this->getStub('model.stub');
-        $stub = str_replace('{{model}}', $this->model_name, $stub);
+        $stub = $this->stubFill('model', $this->model_name, $stub);
 
         return $stub;
     }
@@ -379,7 +369,7 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
         $cols = $this->getColumns();
 
         foreach ($cols as $col) {
-            $name  = $col->getName();
+            $name = $col->getName();
             $type = $col->getPhpType();
             $properties[] = "@property $type $$name";
         }
