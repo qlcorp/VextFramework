@@ -5,9 +5,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 
 class TreeController extends CrudController {
-
-    protected $root = 'children';
-
     protected function baseQuery() {
         return $this->model->newQuery();
     }
@@ -84,17 +81,18 @@ class TreeController extends CrudController {
 
     public function getRead() {
         $Model = $this->Model;
-
         $parentKey   = $this->model->getParentKey();
         $parentValue = $parentKey ? Input::get($parentKey) : null;
 
-        if (isset($_GET['node'])) {  // Process request as tree
-            $node = Input::get('node');
-            $id   = Input::get($this->model->getTable() . '_id');
-            $node = $this->getNode($id, $parentKey, $parentValue);
-        }
-        else {
-            $node = $this->getRecords($parentKey, $parentValue);
+       if (isset($_GET['node'])) {  // Process request as tree
+           $node = Input::get('node');
+           $id = Input::get($this->model->getTable() . '_id');
+           $node = $this->getNode($id, $parentKey, $parentValue);
+           $this->root = 'children';
+        } elseif (isset($_GET['id'])) {
+           $node = $this->baseQuery()->find($_GET['id']);
+        } else {
+           $node = $this->getRecords($parentKey, $parentValue);
         }
 
         return $this->success($node);
@@ -108,7 +106,9 @@ class TreeController extends CrudController {
             $query = $query->where($parentKey, $parentValue);
         }
 
-        return $node = $query->whereNull('parentId')->with('children')->get();
+        $node = $query->whereNull('parentId')->with('children')->first();
+
+        return new Collection($this->flatten($node));
     }
 
     protected function flatten($tree) {
