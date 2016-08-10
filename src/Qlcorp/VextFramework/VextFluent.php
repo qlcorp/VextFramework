@@ -5,11 +5,22 @@ use Illuminate\Support\Contracts\JsonableInterface;
 use Illuminate\Support\Fluent;
 use Closure;
 
-class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface {
+/**
+ * Class VextFluent
+ *
+ * Represents a column in the database.
+ * Used for generating properties in both the PHP and ExtJs Models.
+ *
+ * @author   Tony
+ * @package  Qlcorp\VextFramework
+ * @property string $dateFormat
+ * @property string $dateReadFormat
+ * @method VextFluent nullable()
+ */
+class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
+{
 
     protected $blueprint = null;
-
-    // -- column ---
     protected $gridConfig = null;
     protected $rules = array();
     protected $dropdown = array();
@@ -18,142 +29,213 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
     protected $fieldConfig = array();
     protected $tree = false;
     protected $lookup = null;
+    protected $eagerLoad = true;
 
-    public function __construct($attributes = array(), VextBlueprint $blueprint) {
+    public function __construct($attributes = array(), VextBlueprint $blueprint)
+    {
         parent::__construct($attributes);
         $this->blueprint = $blueprint;
     }
 
-    public function getLookup() {
+    public function getEagerLoad()
+    {
+        return $this->eagerLoad;
+    }
+
+    public function getLookup()
+    {
         return $this->lookup;
     }
 
-    public function getRules() {
+    public function getRules()
+    {
         return $this->rules;
     }
 
-    public function getFieldConfig() {
+    public function getFieldConfig()
+    {
         return $this->fieldConfig;
     }
 
-    public function getName() {
+    public function getName()
+    {
         return $this->attributes['name'];
     }
 
-    public function getType() {
-        if ( ($type = $this->attributes['type']) === 'enum' ) {
-            $type = 'string';
-        }
+    public function getType()
+    {
+        $type = $this->attributes['type'];
 
-        return $type;
+        switch ($type) {
+            case 'char':
+            case 'enum':
+                return 'string';
+            case 'timestamp':
+                return 'date';
+            default:
+                return $type;
+        }
     }
 
-    public function getNullable() {
+    public function getPhpType()
+    {
+        $type = $this->getType();
+        $name = $this->getName();
+        $carbon = array('created_at', 'updated_at');
+
+        switch ($type) {
+            case 'date':
+                return in_array($name, $carbon) ? 'Carbon' : 'timestamp';
+            case 'test':
+                return 'string';
+            default:
+                return $type;
+        }
+    }
+
+    public function getNullable()
+    {
         return isset($this->attributes['nullable']);
     }
 
-    public function getRequired() {
+    public function getRequired()
+    {
         return $this->required;
     }
 
-    //Lookup
-    public function lookup($model, $param = null, $name = null) {
+    public function lookup($model, $param = null, $name = null)
+    {
         return $this->blueprint->getCurrentColumn()->setLookup($model, $param, $name);
     }
 
-    public function setLookup($model, $param = null, $name = null) {
+    public function setLookup($model, $param = null, $name = null)
+    {
         $this->lookup = compact('model');
-        if ( !is_null($param) ) {
+        if (!is_null($param)) {
             $this->lookup['param'] = $param;
         }
-        if ( !is_null($name) ) {
+        if (!is_null($name)) {
             $this->lookup['name'] = $name;
         }
+
         return $this;
     }
 
-    //Fillable
-    //todo: remove from json, addr readOnly field
-    public function fillable() {
+    public function eagerLoad($eager = true)
+    {
+        return $this->blueprint->getCurrentColumn()->setEagerLoad($eager);
+    }
+
+    public function setEagerLoad($eager)
+    {
+        $this->eagerLoad = $eager;
+
+        return $this;
+    }
+
+    public function fillable()
+    {
         return $this->blueprint->getCurrentColumn()->setFillable();
     }
 
-    protected function setFillable() {
+    protected function setFillable()
+    {
         $this->fillable = true;
         $this->blueprint->addFillable($this->attributes['name']);
+
         return $this;
     }
 
-    //Requires/AllowBlank
-    public function required($required = true) {
+    public function required($required = true)
+    {
         return $this->blueprint->getCurrentColumn()->setRequired($required);
     }
 
-    protected function setRequired($required) {
-        $required = (bool) $required;
+    protected function setRequired($required)
+    {
+        $required = (bool)$required;
         $this->fieldConfig['allowBlank'] = !$required;
         $this->required = $required;
+
         return $this;
     }
 
-    //regex
-    public function regex($regex) {
+    public function regex($regex)
+    {
         return $this->blueprint->getCurrentColumn()->setRegex($regex);
     }
 
-    protected function setRegex($regex) {
+    protected function setRegex($regex)
+    {
         $this->fieldConfig['regex'] = $regex;
+
         return $this;
     }
 
-    //Field Label/Width
-    public function fieldConfig($config = array()) {
+    public function fieldConfig($config = array())
+    {
         return $this->blueprint->getCurrentColumn()->setFieldConfig($config);
     }
 
-    protected function setFieldConfig($config = array()) {
+    protected function setFieldConfig($config = array())
+    {
         $this->fieldConfig = array_merge($this->fieldConfig, $config);
+
         return $this;
     }
 
-    //Grid
-    public function gridConfig($configs = array()) {
+    public function gridConfig($configs = array())
+    {
         return $this->blueprint->getCurrentColumn()->setGridConfig($configs);
     }
 
-    protected function setGridConfig($configs = array()) {
+    protected function setGridConfig($configs = array())
+    {
         $this->gridConfig = $configs;
+
         return $this;
     }
 
-    //Dropdown
-    public function dropdown($elements) {
+    public function dropdown($elements)
+    {
         return $this->blueprint->getCurrentColumn()->setDropdown($elements);
     }
 
-    protected function setDropdown($elements) {
-        foreach($elements as $key => $value) {
+    protected function setDropdown($elements)
+    {
+        foreach ($elements as $key => $value) {
             $this->dropdown[] = compact('key', 'value');
         }
+
+        if (isset($this->fieldConfig['maxLength'])) {
+            unset($this->fieldConfig['maxLength']);
+        }
+        if (isset($this->fieldConfig['minLength'])) {
+            unset($this->fieldConfig['minLength']);
+        }
+
         return $this;
     }
 
-    //Vtype
-    public function vtype($vtype) {
+    public function vtype($vtype)
+    {
         return $this->blueprint->getCurrentColumn()->setVtype($vtype);
     }
 
-    protected function setVtype($vtype) {
+    protected function setVtype($vtype)
+    {
         $this->fieldConfig['vtype'] = $vtype;
+
         return $this;
     }
 
-    //Validations
-    public function validation(Closure $callback) {
+    public function validation(Closure $callback)
+    {
         return $this->setValidation($callback);
     }
 
-    protected function setValidation(Closure $callback) {
+    protected function setValidation(Closure $callback)
+    {
         $validate = new VextValidate;
         $callback($validate);
         $this->rules = $validate->getRules();
@@ -162,13 +244,17 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
         return $this;
     }
 
-    public function toJson($options = 0) {
+    public function toJson($options = 0)
+    {
         return json_encode($this->toArray());
     }
 
-    public function toArray() {
+    public function toArray()
+    {
         $this->setOption($field, 'name', $this->getName());
         $this->setOption($field, 'type', $this->getType());
+        $this->setOption($field, 'dateFormat', $this->dateFormat);
+        $this->setOption($field, 'dateReadFormat', $this->dateReadFormat);
         $this->setOption($field, 'useNull', $this->getNullable());
         $this->setOption($field, 'fieldConfig', $this->fieldConfig);
         $this->setOption($field, 'gridConfig', $this->gridConfig);
@@ -183,16 +269,17 @@ class VextFluent extends Fluent implements JsonableInterface, ArrayableInterface
      *
      * $value = $var if $value is not set
      *
-     * @param $array
-     * @param $key
-     * @param $var
+     * @param      $array
+     * @param      $key
+     * @param      $var
      * @param null $value
      * @return mixed
      */
-    protected function setOption(&$array, $key, $var, $value = null) {
+    protected function setOption(&$array, $key, $var, $value = null)
+    {
         $value = ($value === null) ? $var : $value;
 
-        if ( !empty($var) ) {
+        if (!empty($var)) {
             $array[$key] = $value;
         }
 

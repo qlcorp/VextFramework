@@ -12,6 +12,7 @@
 use Illuminate\Support\Facades\Input;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
 
 abstract class CrudController extends BaseController {
     /**
@@ -49,9 +50,15 @@ abstract class CrudController extends BaseController {
             return $me->failure(null, $e->getMessage());
         });
 
+        App::error(function(ModelValidationException $e) use ($me) {
+            return $me->failure(null, $e->getMessage());
+        });
+
+        /*
         App::error(function(\Exception $e) use ($me) {
             return $me->failure(null, $e->getMessage());
         });
+        */
     }
 
     /**
@@ -65,6 +72,10 @@ abstract class CrudController extends BaseController {
         return \VextSchema::getExtJsModel($table);
     }
 
+    protected function baseQuery() {
+        return $this->model->newQuery();
+    }
+
     /**
      * Retrieve records
      *
@@ -76,20 +87,21 @@ abstract class CrudController extends BaseController {
     public function getRead() {
         $Model = $this->Model;
         $parentKey = $this->model->getParentKey();
-        $query = $this->model->newQuery();
+        $query = $this->baseQuery();
+        $table = $this->model->getTable();
+        $primary = $this->model->getKeyName();
 
         if ( $parentKey && Input::has($parentKey) ) {
             $parentValue = Input::get($parentKey);
-            $query = $query->where($parentKey, $parentValue);
+            $query = $query->where("$table.$parentKey", $parentValue);
         }
 
         //Get single record by primary key
-        if ( ($id = $this->getKeyFromInput()) !== null ) {
-            $record = $query->find($id);
+        if ( $id = $this->getKeyFromInput() ) {
+            $record = $query->where("$table.$primary", $id)->first();
             if ( $record !== null ) {
                 return $this->success($record);
             } else {
-                //todo: what to return here?
                 return $this->failure($record, "$Model not found.");
             }
         }
@@ -97,8 +109,20 @@ abstract class CrudController extends BaseController {
         $filter = Input::get('filter');
         $limit =  Input::get('limit');
         $offset = Input::get('start');
+        $lookup_query = Input::get('query');
 
-        if ( $filter ) $this->filterQuery($query, json_decode($filter));
+        if ($lookup_query) {
+            $this->filterQuery($query, array($this->model->queryParam => $lookup_query));
+        }
+
+        if ( $filter ) {
+            $filters = json_decode($filter);
+            $filter_dict = array();
+            foreach($filters as $filter) {
+                $filter_dict[$filter->property] = $filter->value;
+            }
+            $this->filterQuery($query, $filter_dict);
+        }
 
         $count = $query->count();
 
@@ -109,7 +133,16 @@ abstract class CrudController extends BaseController {
             }
         }
 
-        return $this->success($query->get(), array('total' => $count));
+        if (Input::has('sort')) {
+            $sorters = json_decode(Input::get('sort'));
+
+            foreach($sorters as $sorter) {
+                $query->orderBy($sorter->property, $sorter->direction);
+            }
+        }
+
+        $records = $query->get();
+        return $this->success($records, array('total' => $count));
     }
 
     /**
@@ -121,15 +154,21 @@ abstract class CrudController extends BaseController {
      * @throws \InvalidArgumentException
      */
     protected function filterQuery(&$query, $filters) {
-        foreach ($filters as $filter) {
-            $property = $filter->property;
-            $value = '%' . $filter->value . '%';
+        $table = $this->model->getTable();
+        foreach ($filters as $property => $value) {
+            $type = DB::connection()->getDoctrineColumn($table, $property)->getType()->getName();
 
-            if ( empty($property) || empty($value) ) {
-                throw new \InvalidArgumentException();
+            $property = $table . '.' . $property;
+
+            if (str_contains($type, 'time')) {
+                $start = date('Y-m-d H:i:s', strtotime($value->start));
+                $end = date('Y-m-d H:i:s', strtotime($value->end));
+                $query->whereBetween($property, array($start, $end));
+            } else if ($type === 'integer') {
+                $query->where($property, $value);
+            } else {
+                $query->where($property, 'ilike', '%' . $value . '%');
             }
-
-            $query->where($property, 'like', $value);
         }
 
         return $query;
@@ -179,7 +218,7 @@ abstract class CrudController extends BaseController {
     /**
      * Delete record
      */
-    public function postDelete() {
+    public function postDestroy() {
         $Model = $this->Model;
 
         $id = $this->getKeyFromInput();
@@ -207,7 +246,11 @@ abstract class CrudController extends BaseController {
 
     public function success($records = null, $options = array()) {
         if (!is_null($records)) {
-            $options[$this->root] = $records->toArray();
+            if (!is_array($records)) {
+                $records = $records->toArray();
+            }
+
+            $options[$this->root] = $records;
         }
         return parent::success($options);
     }

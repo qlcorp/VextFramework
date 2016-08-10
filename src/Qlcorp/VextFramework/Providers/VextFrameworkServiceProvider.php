@@ -24,6 +24,7 @@ class VextFrameworkServiceProvider extends ServiceProvider {
 	public function boot()
 	{
 		$this->package('qlcorp/vext-framework');
+        include __DIR__.'/../../routes.php';
 	}
 
 	/**

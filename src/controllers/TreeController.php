@@ -5,8 +5,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 
 class TreeController extends CrudController {
-
-    protected $root = 'children';
+    protected function baseQuery() {
+        return $this->model->newQuery();
+    }
 
     protected function createRoot($parentKey) {
         $Model = $this->Model;
@@ -16,6 +17,24 @@ class TreeController extends CrudController {
             'text'  => 'New Root',
             $this->model->parentKey => $parentKey
         ));
+    }
+
+    public function postDestroy() {
+        $Model = $this->Model;
+        $id = Input::get('id');
+        $node = $Model::findOrFail($id);
+
+        if (!$node->parentId) {
+            return $this->failure(null, 'Permission denied.');
+        }
+
+        $Model::where('parentId', $node->parentId)
+            ->where('index', '>', $node->index)
+            ->decrement('index');
+
+        $node->delete();
+
+        return $this->success();
     }
 
     public function postCopy() {
@@ -62,25 +81,26 @@ class TreeController extends CrudController {
 
     public function getRead() {
         $Model = $this->Model;
-
         $parentKey   = $this->model->getParentKey();
         $parentValue = $parentKey ? Input::get($parentKey) : null;
 
-        if (isset($_GET['node'])) {  // Process request as tree
-            $node = Input::get('node');
-            $id   = Input::get($this->model->getTable() . '_id');
-            $node = $this->getNode($id, $parentKey, $parentValue);
-        }
-        else {
-            $node = $this->getRecords($parentKey, $parentValue);
+       if (isset($_GET['node'])) {  // Process request as tree
+           $node = Input::get('node');
+           $id = Input::get($this->model->getTable() . '_id');
+           $node = $this->getNode($id, $parentKey, $parentValue);
+           $this->root = 'children';
+        } elseif (isset($_GET['id'])) {
+           $node = $this->baseQuery()->find($_GET['id']);
+        } else {
+           $node = $this->getRecords($parentKey, $parentValue);
         }
 
         return $this->success($node);
     }
 
     protected function getRecords($parentKey = null, $parentValue = null) {
-        $this->root = $this->model->getTable();
-        $query = $this->model->newQuery();
+        $this->root = lcfirst($this->Model);
+        $query = $this->baseQuery();
 
         if ( $parentKey ) {
             $query = $query->where($parentKey, $parentValue);
@@ -134,7 +154,6 @@ class TreeController extends CrudController {
         $Model = $this->Model;
 
         DB::transaction(function() use ($Model) {
-
             $id = Input::get('id');
             $oldParentId = Input::get('oldParentId');
             $newParentId = Input::get('newParentId');
@@ -142,8 +161,6 @@ class TreeController extends CrudController {
 
             $node = $Model::findOrFail($id);
             $oldIndex = $node->index;
-
-            //$node->delete();
 
             $Model::where('parentId', $oldParentId)
                 ->where('index', '>', $oldIndex)
@@ -155,9 +172,9 @@ class TreeController extends CrudController {
 
             $node->index = $newIndex;
             $node->parentId = $newParentId;
+
             $node->save();
         });
-
 
     }
 
