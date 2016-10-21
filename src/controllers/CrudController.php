@@ -142,6 +142,7 @@ abstract class CrudController extends BaseController {
         }
 
         $records = $query->get();
+
         return $this->success($records, array('total' => $count));
     }
 

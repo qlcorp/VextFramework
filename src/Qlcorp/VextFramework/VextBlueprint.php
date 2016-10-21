@@ -87,8 +87,8 @@ class VextBlueprint extends Blueprint implements JsonableInterface, ArrayableInt
     public function timestamp($column)
     {
         $timestamp = parent::timestamp($column);
-        $label = ucfirst(str_replace('_', ' ', $column));
-        $timestamp->dateFormat = 'Y-m-d';
+        $label = ucwords(str_replace('_', ' ', $column));
+        $timestamp->dateFormat = 'Y-m-d H:i:s';
         $timestamp = $timestamp->fieldConfig(array(
             'fieldLabel' => $label,
         ));
