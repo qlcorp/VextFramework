@@ -2,7 +2,7 @@
     "name": "qlcorp/vext-framework",
     "description": "Interfaces Laravel with ExtJs",
     "license": "MIT",
-    "version": "1.0.0",
+    "version": "1.1.0.1",
     "keywords": ["laravel", "extjs", "crud"],
     "authors": [
         {
